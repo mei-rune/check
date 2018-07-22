@@ -7,7 +7,7 @@ import (
 type check_data struct {
 	t        string
 	operator string
-	operant  string
+	operant  interface{}
 	value    interface{}
 
 	excepted_error  string
@@ -18,64 +18,46 @@ type check_data struct {
 func TestChecker(t *testing.T) {
 	var all_check_data []check_data
 
-	//, float32(12), float64(12)
-	for _, v := range []interface{}{"12", uint(12), uint8(12), uint16(12), uint32(12), uint64(12), int(12), int8(12), int16(12), int32(12), int64(12)} {
-		for _, test := range []check_data{
-			{t: "biginteger", operator: ">", operant: "11", value: v, excepted_status: true},
-			{t: "biginteger", operator: ">", operant: "12", value: v, excepted_status: false},
-
-			{t: "biginteger", operator: ">=", operant: "11", value: v, excepted_status: true},
-			{t: "biginteger", operator: ">=", operant: "12", value: v, excepted_status: true},
-			{t: "biginteger", operator: ">=", operant: "13", value: v, excepted_status: false},
-
-			{t: "biginteger", operator: "<", operant: "14", value: v, excepted_status: true},
-			{t: "biginteger", operator: "<", operant: "12", value: v, excepted_status: false},
-
-			{t: "biginteger", operator: "<=", operant: "14", value: v, excepted_status: true},
-			{t: "biginteger", operator: "<=", operant: "12", value: v, excepted_status: true},
-			{t: "biginteger", operator: "<=", operant: "11", value: v, excepted_status: false},
-
-			{t: "biginteger", operator: "=", operant: "12", value: v, excepted_status: true},
-			{t: "biginteger", operator: "==", operant: "12", value: v, excepted_status: true},
-			{t: "biginteger", operator: "!=", operant: "11", value: v, excepted_status: true},
-			{t: "biginteger", operator: "<>", operant: "11", value: v, excepted_status: true},
-
-			{t: "biginteger", operator: "=", operant: "11", value: v, excepted_status: false},
-			{t: "biginteger", operator: "==", operant: "11", value: v, excepted_status: false},
-			{t: "biginteger", operator: "!=", operant: "12", value: v, excepted_status: false},
-			{t: "biginteger", operator: "<>", operant: "12", value: v, excepted_status: false},
-		} {
-			all_check_data = append(all_check_data, test)
-		}
-	}
-
 	for _, class := range []string{"integer", "biginteger", "decimal"} {
-		for _, test := range []check_data{
-			{t: class, operator: ">", operant: "12", value: 13, excepted_status: true},
-			{t: class, operator: ">", operant: "12", value: 12, excepted_status: false},
-
-			{t: class, operator: ">=", operant: "12", value: 13, excepted_status: true},
-			{t: class, operator: ">=", operant: "12", value: 12, excepted_status: true},
-			{t: class, operator: ">=", operant: "12", value: 11, excepted_status: false},
-
-			{t: class, operator: "<", operant: "14", value: 13, excepted_status: true},
-			{t: class, operator: "<", operant: "12", value: 12, excepted_status: false},
-
-			{t: class, operator: "<=", operant: "14", value: 13, excepted_status: true},
-			{t: class, operator: "<=", operant: "12", value: 12, excepted_status: true},
-			{t: class, operator: "<=", operant: "11", value: 12, excepted_status: false},
-
-			{t: class, operator: "=", operant: "11", value: 11, excepted_status: true},
-			{t: class, operator: "==", operant: "11", value: 11, excepted_status: true},
-			{t: class, operator: "!=", operant: "11", value: "12", excepted_status: true},
-			{t: class, operator: "<>", operant: "11", value: "12", excepted_status: true},
-
-			{t: class, operator: "=", operant: "12", value: 11, excepted_status: false},
-			{t: class, operator: "==", operant: "12", value: 11, excepted_status: false},
-			{t: class, operator: "!=", operant: "12", value: "12", excepted_status: false},
-			{t: class, operator: "<>", operant: "12", value: "12", excepted_status: false},
-		} {
-			all_check_data = append(all_check_data, test)
+		for _, v := range []interface{}{"12", uint(12), uint8(12), uint16(12), uint32(12), uint64(12), int(12), int8(12), int16(12), int32(12), int64(12), float32(12), float64(12)} {
+			for _, operant := range []interface{}{"11", uint(11), uint8(11), uint16(11), uint32(11), uint64(11), int(11), int8(11), int16(11), int32(11), int64(11), float32(11), float64(11)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: ">", operant: operant, value: v, excepted_status: true})
+			}
+			for _, operant := range []interface{}{"12", uint(12), uint8(12), uint16(12), uint32(12), uint64(12), int(12), int8(12), int16(12), int32(12), int64(12), float32(12), float64(12)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: ">", operant: operant, value: v, excepted_status: false})
+			}
+			for _, operant := range []interface{}{"11", uint(11), uint8(11), uint16(11), uint32(11), uint64(11), int(11), int8(11), int16(11), int32(11), int64(11), float32(11), float64(11)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: ">=", operant: operant, value: v, excepted_status: true})
+			}
+			for _, operant := range []interface{}{"12", uint(12), uint8(12), uint16(12), uint32(12), uint64(12), int(12), int8(12), int16(12), int32(12), int64(12), float32(12), float64(12)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: ">=", operant: operant, value: v, excepted_status: true})
+			}
+			for _, operant := range []interface{}{"13", uint(13), uint8(13), uint16(13), uint32(13), uint64(13), int(13), int8(13), int16(13), int32(13), int64(13), float32(13), float64(13)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: ">=", operant: operant, value: v, excepted_status: false})
+			}
+			for _, operant := range []interface{}{"13", uint(13), uint8(13), uint16(13), uint32(13), uint64(13), int(13), int8(13), int16(13), int32(13), int64(13), float32(13), float64(13)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: "<", operant: operant, value: v, excepted_status: true})
+			}
+			for _, operant := range []interface{}{"12", uint(12), uint8(12), uint16(12), uint32(12), uint64(12), int(12), int8(12), int16(12), int32(12), int64(12), float32(12), float64(12)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: "<", operant: operant, value: v, excepted_status: false})
+			}
+			for _, operant := range []interface{}{"11", uint(11), uint8(11), uint16(11), uint32(11), uint64(11), int(11), int8(11), int16(11), int32(11), int64(11), float32(11), float64(11)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: "<=", operant: operant, value: v, excepted_status: false})
+			}
+			for _, operant := range []interface{}{"12", uint(12), uint8(12), uint16(12), uint32(12), uint64(12), int(12), int8(12), int16(12), int32(12), int64(12), float32(12), float64(12)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: "<=", operant: operant, value: v, excepted_status: true})
+			}
+			for _, operant := range []interface{}{"13", uint(13), uint8(13), uint16(13), uint32(13), uint64(13), int(13), int8(13), int16(13), int32(13), int64(13), float32(13), float64(13)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: "<=", operant: operant, value: v, excepted_status: true})
+			}
+			for _, operant := range []interface{}{"11", uint(11), uint8(11), uint16(11), uint32(11), uint64(11), int(11), int8(11), int16(11), int32(11), int64(11), float32(11), float64(11)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: "=", operant: operant, value: v, excepted_status: false})
+				all_check_data = append(all_check_data, check_data{t: class, operator: "!=", operant: operant, value: v, excepted_status: true})
+			}
+			for _, operant := range []interface{}{"12", uint(12), uint8(12), uint16(12), uint32(12), uint64(12), int(12), int8(12), int16(12), int32(12), int64(12), float32(12), float64(12)} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: "=", operant: operant, value: v, excepted_status: true})
+				all_check_data = append(all_check_data, check_data{t: class, operator: "!=", operant: operant, value: v, excepted_status: false})
+			}
 		}
 	}
 

@@ -179,6 +179,11 @@ func uintCheck(exceptedValue uint64) func(value interface{}) (int, error) {
 			if actualValue < 0 {
 				return 1, nil
 			}
+
+			if float64(exceptedValue) > float64(actualValue) {
+				return 1, nil
+			}
+
 			if float64(exceptedValue) == float64(actualValue) {
 				return 0, nil
 			}
@@ -187,6 +192,11 @@ func uintCheck(exceptedValue uint64) func(value interface{}) (int, error) {
 			if actualValue < 0 {
 				return 1, nil
 			}
+
+			if float64(exceptedValue) > float64(actualValue) {
+				return 1, nil
+			}
+
 			if float64(exceptedValue) == float64(actualValue) {
 				return 0, nil
 			}
@@ -276,7 +286,12 @@ func floatCheck(exceptedValue float64) func(value interface{}) (int, error) {
 			if actualValue < 0 {
 				return 1, nil
 			}
-			if float64(exceptedValue) == float64(actualValue) {
+
+			if exceptedValue > float64(actualValue) {
+				return 1, nil
+			}
+
+			if exceptedValue == float64(actualValue) {
 				return 0, nil
 			}
 			return -1, nil
@@ -284,7 +299,12 @@ func floatCheck(exceptedValue float64) func(value interface{}) (int, error) {
 			if actualValue < 0 {
 				return 1, nil
 			}
-			if exceptedValue == float64(actualValue) {
+
+			if exceptedValue > float64(actualValue) {
+				return 1, nil
+			}
+
+			if exceptedValue == actualValue {
 				return 0, nil
 			}
 			return -1, nil
