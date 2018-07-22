@@ -7,10 +7,165 @@ import (
 )
 
 func init() {
-	UnsupportedCheckFunc(">", "datetime")
-	UnsupportedCheckFunc(">=", "datetime")
-	UnsupportedCheckFunc("<", "datetime")
-	UnsupportedCheckFunc("<=", "datetime")
+	AddCheckFunc("<", "datetime", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		var exceptedValue time.Time
+		switch aValue := argValue.(type) {
+		case string:
+			tt, err := toTime(aValue)
+			if err != nil {
+				return nil, ErrArgumentType(">", "datetime", argValue)
+			}
+			exceptedValue = tt
+		case time.Time:
+			exceptedValue = aValue
+		case *time.Time:
+			if aValue == nil {
+				return nil, ErrArgumentType(">", "datetime", argValue)
+			}
+			exceptedValue = *aValue
+		default:
+			return nil, ErrArgumentType(">", "datetime", argValue)
+		}
+
+		return CheckFunc(func(value interface{}) (bool, error) {
+			switch actualValue := value.(type) {
+			case string:
+				aValue, err := toTime(actualValue)
+				if err != nil {
+					return false, ErrActualType(">", "datetime", value)
+				}
+				return aValue.After(exceptedValue), nil
+			case time.Time:
+				return actualValue.After(exceptedValue), nil
+			case *time.Time:
+				if actualValue == nil {
+					return false, nil
+				}
+				return actualValue.After(exceptedValue), nil
+			}
+			return false, ErrActualType(">", "datetime", value)
+		}), nil
+	}))
+
+	AddCheckFunc("<=", "datetime", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		var exceptedValue time.Time
+		switch aValue := argValue.(type) {
+		case string:
+			tt, err := toTime(aValue)
+			if err != nil {
+				return nil, ErrArgumentType(">=", "datetime", argValue)
+			}
+			exceptedValue = tt
+		case time.Time:
+			exceptedValue = aValue
+		case *time.Time:
+			if aValue == nil {
+				return nil, ErrArgumentType(">=", "datetime", argValue)
+			}
+			exceptedValue = *aValue
+		default:
+			return nil, ErrArgumentType(">=", "datetime", argValue)
+		}
+
+		return CheckFunc(func(value interface{}) (bool, error) {
+			switch actualValue := value.(type) {
+			case string:
+				aValue, err := toTime(actualValue)
+				if err != nil {
+					return false, ErrActualType(">=", "datetime", value)
+				}
+				return aValue.After(exceptedValue) || aValue.Equal(exceptedValue), nil
+			case time.Time:
+				return actualValue.After(exceptedValue), nil
+			case *time.Time:
+				if actualValue == nil {
+					return false, nil
+				}
+				return actualValue.After(exceptedValue) || actualValue.Equal(exceptedValue), nil
+			}
+			return false, ErrActualType(">=", "datetime", value)
+		}), nil
+	}))
+
+	AddCheckFunc("<", "datetime", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		var exceptedValue time.Time
+		switch aValue := argValue.(type) {
+		case string:
+			tt, err := toTime(aValue)
+			if err != nil {
+				return nil, ErrArgumentType("<", "datetime", argValue)
+			}
+			exceptedValue = tt
+		case time.Time:
+			exceptedValue = aValue
+		case *time.Time:
+			if aValue == nil {
+				return nil, ErrArgumentType("<", "datetime", argValue)
+			}
+			exceptedValue = *aValue
+		default:
+			return nil, ErrArgumentType("<", "datetime", argValue)
+		}
+
+		return CheckFunc(func(value interface{}) (bool, error) {
+			switch actualValue := value.(type) {
+			case string:
+				aValue, err := toTime(actualValue)
+				if err != nil {
+					return false, ErrActualType("<", "datetime", value)
+				}
+				return aValue.Before(exceptedValue), nil
+			case time.Time:
+				return actualValue.Before(exceptedValue), nil
+			case *time.Time:
+				if actualValue == nil {
+					return false, nil
+				}
+				return actualValue.Before(exceptedValue), nil
+			}
+			return false, ErrActualType("<", "datetime", value)
+		}), nil
+	}))
+
+	AddCheckFunc("<=", "datetime", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		var exceptedValue time.Time
+		switch aValue := argValue.(type) {
+		case string:
+			tt, err := toTime(aValue)
+			if err != nil {
+				return nil, ErrArgumentType("<=", "datetime", argValue)
+			}
+			exceptedValue = tt
+		case time.Time:
+			exceptedValue = aValue
+		case *time.Time:
+			if aValue == nil {
+				return nil, ErrArgumentType("<=", "datetime", argValue)
+			}
+			exceptedValue = *aValue
+		default:
+			return nil, ErrArgumentType("<=", "datetime", argValue)
+		}
+
+		return CheckFunc(func(value interface{}) (bool, error) {
+			switch actualValue := value.(type) {
+			case string:
+				aValue, err := toTime(actualValue)
+				if err != nil {
+					return false, ErrActualType("<", "datetime", value)
+				}
+				return aValue.Before(exceptedValue) || aValue.Equal(exceptedValue), nil
+			case time.Time:
+				return actualValue.Before(exceptedValue), nil
+			case *time.Time:
+				if actualValue == nil {
+					return false, nil
+				}
+				return actualValue.Before(exceptedValue) || actualValue.Equal(exceptedValue), nil
+			}
+			return false, ErrActualType("<=", "datetime", value)
+		}), nil
+	}))
 
 	AddCheckFunc("=", "datetime", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		var exceptedValue string
@@ -19,6 +174,11 @@ func init() {
 		switch aValue := argValue.(type) {
 		case string:
 			exceptedValue = aValue
+			if tt, err := toTime(aValue); err != nil {
+				return nil, ErrArgumentType("=", "datetime", argValue)
+			} else {
+				exceptedTime = tt
+			}
 		case time.Time:
 			exceptedValue = aValue.Format(time.RFC3339Nano)
 			exceptedTime = aValue
@@ -63,6 +223,11 @@ func init() {
 		switch aValue := argValue.(type) {
 		case string:
 			exceptedValue = aValue
+			if tt, err := toTime(aValue); err != nil {
+				return nil, ErrArgumentType("=", "datetime", argValue)
+			} else {
+				exceptedTime = tt
+			}
 		case time.Time:
 			exceptedValue = aValue.Format(time.RFC3339Nano)
 			exceptedTime = aValue
