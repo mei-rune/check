@@ -6,8 +6,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/three-plus-three/modules/as"
 )
 
 func int64strCmp(a int64, bvalue string) (int, error) {
@@ -455,7 +453,7 @@ func init() {
 			if !ok {
 				return nil, ErrArgumentType("in", "Int64Array", argValue)
 			}
-			exceptedArray, err = as.Int64Array(strings.Split(svalue, ","))
+			exceptedArray, err = toInt64Array(strings.Split(svalue, ","))
 			if err != nil {
 				return nil, ErrArgumentType("in", "Int64Array", argValue)
 			}
@@ -481,7 +479,7 @@ func init() {
 			if !ok {
 				return nil, ErrArgumentType("in", "Int64Array", argValue)
 			}
-			exceptedArray, err = as.Int64Array(strings.Split(svalue, ","))
+			exceptedArray, err = toInt64Array(strings.Split(svalue, ","))
 			if err != nil {
 				return nil, ErrArgumentType("in", "Int64Array", argValue)
 			}
