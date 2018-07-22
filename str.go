@@ -5,8 +5,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/three-plus-three/modules/as"
 )
 
 func init() {
@@ -17,7 +15,7 @@ func init() {
 			return nil, ErrArgumentType("=", "string", argValue)
 		}
 		return CheckFunc(func(value interface{}) (bool, error) {
-			actualValue, err := as.String(value)
+			actualValue, err := toString(value)
 			if err != nil {
 				return false, ErrActualType("=", "string", value)
 			}
@@ -155,7 +153,7 @@ func init() {
 	}))
 
 	AddCheckFunc("in", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		exceptedArray, err := as.Strings(argValue)
+		exceptedArray, err := toStrings(argValue)
 		if err != nil {
 			svalue, ok := argValue.(string)
 			if !ok {
@@ -165,7 +163,7 @@ func init() {
 			exceptedArray = append(exceptedArray, svalue)
 		}
 		return CheckFunc(func(value interface{}) (bool, error) {
-			actualValue, err := as.String(value)
+			actualValue, err := toString(value)
 			if err != nil {
 				return false, ErrActualType("in", "string", value)
 			}
@@ -179,7 +177,7 @@ func init() {
 	}))
 
 	AddCheckFunc("nin", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		exceptedArray, err := as.Strings(argValue)
+		exceptedArray, err := toStrings(argValue)
 		if err != nil {
 			svalue, ok := argValue.(string)
 			if !ok {
@@ -189,7 +187,7 @@ func init() {
 			exceptedArray = append(exceptedArray, svalue)
 		}
 		return CheckFunc(func(value interface{}) (bool, error) {
-			actualValue, err := as.String(value)
+			actualValue, err := toString(value)
 			if err != nil {
 				return false, ErrActualType("nin", "string", value)
 			}
