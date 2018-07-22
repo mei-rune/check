@@ -10,7 +10,8 @@ import (
 )
 
 func init() {
-	AddCheckFunc("=", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+
+	strEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("=", "string", argValue)
@@ -22,9 +23,11 @@ func init() {
 			}
 			return actualValue == exceptedValue, nil
 		}), nil
-	}))
+	})
+	AddCheckFunc("=", "string", strEquals)
+	AddCheckFunc("equals", "string", strEquals)
 
-	AddCheckFunc("!=", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	strNotEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("!=", "string", argValue)
@@ -35,6 +38,119 @@ func init() {
 				return false, ErrActualType("!=", "string", value)
 			}
 			return actualValue != exceptedValue, nil
+		}), nil
+	})
+	AddCheckFunc("!=", "string", strNotEquals)
+	AddCheckFunc("not_equals", "string", strNotEquals)
+
+	AddCheckFunc("contains", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		exceptedValue, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("contains", "string", argValue)
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("contains", "string", value)
+			}
+			return strings.Contains(actualValue, exceptedValue), nil
+		}), nil
+	}))
+	AddCheckFunc("not_contains", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		exceptedValue, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("not_contains", "string", argValue)
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("not_contains", "string", value)
+			}
+			return !strings.Contains(actualValue, exceptedValue), nil
+		}), nil
+	}))
+
+	AddCheckFunc("contains", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		exceptedValue, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("contains", "string", argValue)
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("contains", "string", value)
+			}
+			return strings.Contains(actualValue, exceptedValue), nil
+		}), nil
+	}))
+
+	AddCheckFunc("contains_with_ignore_case", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		exceptedValue, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("contains_with_ignore_case", "string", argValue)
+		}
+		exceptedValue = strings.ToLower(exceptedValue)
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("contains_with_ignore_case", "string", value)
+			}
+			if strings.Contains(actualValue, exceptedValue) {
+				return true, nil
+			}
+			return strings.Contains(strings.ToLower(actualValue), exceptedValue), nil
+		}), nil
+	}))
+	AddCheckFunc("not_contains_with_ignore_case", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		exceptedValue, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("not_contains_with_ignore_case", "string", argValue)
+		}
+		exceptedValue = strings.ToLower(exceptedValue)
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("not_contains_with_ignore_case", "string", value)
+			}
+			if strings.Contains(actualValue, exceptedValue) {
+				return false, nil
+			}
+			return !strings.Contains(strings.ToLower(actualValue), exceptedValue), nil
+		}), nil
+	}))
+
+	AddCheckFunc("equals_with_ignore_case", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		exceptedValue, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("equals_with_ignore_case", "string", argValue)
+		}
+		exceptedValue = strings.ToLower(exceptedValue)
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("equals_with_ignore_case", "string", value)
+			}
+			if actualValue == exceptedValue {
+				return true, nil
+			}
+			return strings.ToLower(actualValue) == exceptedValue, nil
+		}), nil
+	}))
+	AddCheckFunc("not_equals_with_ignore_case", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		exceptedValue, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("not_equals_with_ignore_case", "string", argValue)
+		}
+		exceptedValue = strings.ToLower(exceptedValue)
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("not_equals_with_ignore_case", "string", value)
+			}
+			if actualValue == exceptedValue {
+				return false, nil
+			}
+			return strings.ToLower(actualValue) != exceptedValue, nil
 		}), nil
 	}))
 

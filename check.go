@@ -66,6 +66,10 @@ func errType(value interface{}, typ string) error {
 }
 
 var (
+	TypeAlias = map[string]string{
+		"bigInteger": "integer",
+		"biginteger": "integer",
+	}
 	OpAlias = map[string]string{
 		"<>":         "!=",
 		"==":         "=",
@@ -95,7 +99,12 @@ var (
 )
 
 func AddCheckFunc(op, typ string, f CheckFactoryFunc) {
-	CheckFactories[op][typ] = f
+	byOp := CheckFactories[op]
+	if byOp == nil {
+		byOp = map[string]CheckFactory{}
+		CheckFactories[op] = byOp
+	}
+	byOp[typ] = f
 }
 
 func UnsupportedCheckFunc(op, typ string) {
@@ -103,19 +112,6 @@ func UnsupportedCheckFunc(op, typ string) {
 }
 
 func init() {
-	UnsupportedCheckFunc(">", "biginteger")
-	UnsupportedCheckFunc(">=", "biginteger")
-	UnsupportedCheckFunc("<", "biginteger")
-	UnsupportedCheckFunc("<=", "biginteger")
-	UnsupportedCheckFunc("=", "biginteger")
-	UnsupportedCheckFunc("!=", "biginteger")
-	UnsupportedCheckFunc("in", "biginteger")
-	UnsupportedCheckFunc("nin", "biginteger")
-
-	UnsupportedCheckFunc(">", "decimal")
-	UnsupportedCheckFunc(">=", "decimal")
-	UnsupportedCheckFunc("<", "decimal")
-	UnsupportedCheckFunc("<=", "decimal")
 
 	// UnsupportedCheckFunc(">", "password")
 	// UnsupportedCheckFunc(">=", "password")
@@ -209,6 +205,12 @@ func MakeChecker(typ, operator string, value interface{}) (Checker, error) {
 	creator := factories[typ]
 	if creator != nil {
 		return creator.Create(value)
+	}
+	if alias, ok := TypeAlias[typ]; ok {
+		creator = factories[alias]
+		if creator != nil {
+			return creator.Create(value)
+		}
 	}
 	return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
 }
