@@ -374,6 +374,8 @@ func numberCheck(argValue interface{}) (func(value interface{}) (int, error), er
 		return stringAsNumberCheck(v)
 	case json.Number:
 		return stringAsNumberCheck(v.String())
+	case *json.Number:
+		return stringAsNumberCheck(v.String())
 	}
 	if nil == argValue {
 		return nil, ErrValueNull
