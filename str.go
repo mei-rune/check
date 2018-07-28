@@ -68,20 +68,6 @@ func init() {
 		}), nil
 	}))
 
-	AddCheckFunc("contains", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		exceptedValue, err := toString(argValue)
-		if err != nil {
-			return nil, ErrArgumentType("contains", "string", argValue)
-		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			actualValue, err := toString(value)
-			if err != nil {
-				return false, ErrActualType("contains", "string", value)
-			}
-			return strings.Contains(actualValue, exceptedValue), nil
-		}), nil
-	}))
-
 	AddCheckFunc("contains_with_ignore_case", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
 		if err != nil {
