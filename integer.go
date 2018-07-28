@@ -239,7 +239,9 @@ func float64uint64Cmp(a float64, b uint64) int {
 }
 func float64int64Cmp(a float64, b int64) int {
 	if b < 0 {
-		return 1
+		if a > 0 {
+			return 1
+		}
 	}
 	fb := float64(b)
 	if fb < a {
@@ -283,10 +285,6 @@ func floatCheck(exceptedValue float64) func(value interface{}) (int, error) {
 		case int64:
 			return float64int64Cmp(exceptedValue, int64(actualValue)), nil
 		case float32:
-			if actualValue < 0 {
-				return 1, nil
-			}
-
 			if exceptedValue > float64(actualValue) {
 				return 1, nil
 			}
@@ -296,10 +294,6 @@ func floatCheck(exceptedValue float64) func(value interface{}) (int, error) {
 			}
 			return -1, nil
 		case float64:
-			if actualValue < 0 {
-				return 1, nil
-			}
-
 			if exceptedValue > float64(actualValue) {
 				return 1, nil
 			}
@@ -394,6 +388,7 @@ func init() {
 			if err != nil {
 				return false, ErrActualType(">", "integer", value)
 			}
+			//fmt.Printf("1(%T) %v > (%T) %v   = %v\r\n", argValue, argValue, value, value, r)
 			return r < 0, nil
 		}), nil
 	}))
@@ -408,6 +403,8 @@ func init() {
 			if err != nil {
 				return false, ErrActualType(">=", "integer", value)
 			}
+
+			//fmt.Printf("2(%T) %v >= (%T) %v   = %v\r\n", argValue, argValue, value, value, r)
 			return r <= 0, nil
 		}), nil
 	}))
