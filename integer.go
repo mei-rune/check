@@ -599,91 +599,6 @@ func toInt64Array(value interface{}) ([]int64, error) {
 	return nil, errType(value, "int64Array")
 }
 
-func toUint64Array(value interface{}) ([]uint64, error) {
-	switch a := value.(type) {
-	case []interface{}:
-		uints := make([]uint64, len(a))
-		for i := range a {
-			iv, err := toUint64(a[i])
-			if err != nil {
-				return nil, errType(value, "uint64Array")
-			}
-			uints[i] = iv
-		}
-		return uints, nil
-	case []string:
-		uints := make([]uint64, len(a))
-		for i := range a {
-			iv, err := strconv.ParseUint(a[i], 10, 64)
-			if err != nil {
-				return nil, errType(value, "uint64Array")
-			}
-			uints[i] = iv
-		}
-		return uints, nil
-	case []int64:
-		uints := make([]uint64, len(a))
-		for i := range a {
-			if a[i] < 0 {
-				return nil, errType(value, "uint64Array")
-			}
-			uints[i] = uint64(a[i])
-		}
-		return uints, nil
-	case []int:
-		uints := make([]uint64, len(a))
-		for i := range a {
-			if a[i] < 0 {
-				return nil, errType(value, "uint64Array")
-			}
-			uints[i] = uint64(a[i])
-		}
-		return uints, nil
-	case []int32:
-		uints := make([]uint64, len(a))
-		for i := range a {
-			if a[i] < 0 {
-				return nil, errType(value, "uint64Array")
-			}
-			uints[i] = uint64(a[i])
-		}
-		return uints, nil
-	case []uint64:
-		return a, nil
-	case []uint:
-		uints := make([]uint64, len(a))
-		for i := range a {
-			uints[i] = uint64(a[i])
-		}
-		return uints, nil
-	case []uint32:
-		uints := make([]uint64, len(a))
-		for i := range a {
-			uints[i] = uint64(a[i])
-		}
-		return uints, nil
-	default:
-		rv := reflect.ValueOf(value)
-		if rv.Kind() == reflect.Ptr {
-			rv = rv.Elem()
-		}
-
-		if rv.Kind() == reflect.Slice {
-			aLen := rv.Len()
-			uints := make([]uint64, aLen)
-			for i := 0; i < aLen; i++ {
-				iv, err := toUint64(rv.Index(i).Interface())
-				if err != nil {
-					return nil, errType(value, "uint64Array")
-				}
-				uints[i] = iv
-			}
-			return uints, nil
-		}
-	}
-	return nil, errType(value, "uint64Array")
-}
-
 // Int type AsSerts to `float64` then converts to `int`
 func toInt64(value interface{}) (int64, error) {
 	switch v := value.(type) {
@@ -752,100 +667,185 @@ func toInt64(value interface{}) (int64, error) {
 	return 0, errType(value, "int64")
 }
 
-func toUint64(value interface{}) (uint64, error) {
-	switch v := value.(type) {
-	case []byte:
-		i64, err := strconv.ParseUint(string(v), 10, 64)
-		if nil == err {
-			return i64, nil
-		}
-	case string:
-		i64, err := strconv.ParseUint(v, 10, 64)
-		if nil == err {
-			return i64, nil
-		}
-		return i64, errType(value, "uint64")
+// func toUint64Array(value interface{}) ([]uint64, error) {
+// 	switch a := value.(type) {
+// 	case []interface{}:
+// 		uints := make([]uint64, len(a))
+// 		for i := range a {
+// 			iv, err := toUint64(a[i])
+// 			if err != nil {
+// 				return nil, errType(value, "uint64Array")
+// 			}
+// 			uints[i] = iv
+// 		}
+// 		return uints, nil
+// 	case []string:
+// 		uints := make([]uint64, len(a))
+// 		for i := range a {
+// 			iv, err := strconv.ParseUint(a[i], 10, 64)
+// 			if err != nil {
+// 				return nil, errType(value, "uint64Array")
+// 			}
+// 			uints[i] = iv
+// 		}
+// 		return uints, nil
+// 	case []int64:
+// 		uints := make([]uint64, len(a))
+// 		for i := range a {
+// 			if a[i] < 0 {
+// 				return nil, errType(value, "uint64Array")
+// 			}
+// 			uints[i] = uint64(a[i])
+// 		}
+// 		return uints, nil
+// 	case []int:
+// 		uints := make([]uint64, len(a))
+// 		for i := range a {
+// 			if a[i] < 0 {
+// 				return nil, errType(value, "uint64Array")
+// 			}
+// 			uints[i] = uint64(a[i])
+// 		}
+// 		return uints, nil
+// 	case []int32:
+// 		uints := make([]uint64, len(a))
+// 		for i := range a {
+// 			if a[i] < 0 {
+// 				return nil, errType(value, "uint64Array")
+// 			}
+// 			uints[i] = uint64(a[i])
+// 		}
+// 		return uints, nil
+// 	case []uint64:
+// 		return a, nil
+// 	case []uint:
+// 		uints := make([]uint64, len(a))
+// 		for i := range a {
+// 			uints[i] = uint64(a[i])
+// 		}
+// 		return uints, nil
+// 	case []uint32:
+// 		uints := make([]uint64, len(a))
+// 		for i := range a {
+// 			uints[i] = uint64(a[i])
+// 		}
+// 		return uints, nil
+// 	default:
+// 		rv := reflect.ValueOf(value)
+// 		if rv.Kind() == reflect.Ptr {
+// 			rv = rv.Elem()
+// 		}
 
-	case json.Number:
-		i64, err := strconv.ParseUint(v.String(), 10, 64)
-		if nil == err {
-			return i64, nil
-		}
-		f64, err := v.Float64()
-		if nil == err {
-			if f64 >= 0 {
-				return uint64(f64), nil
-			}
-			if f64 < 0 {
-				if math.IsNaN(f64) {
-					return 0, nil
-				}
-				if int64(f64) == 0 {
-					return 0, nil
-				}
-			}
-		} else {
-			return 0, errType(value, "uint64")
-		}
-	case uint:
-		return uint64(v), nil
-	case uint8:
-		return uint64(v), nil
-	case uint16:
-		return uint64(v), nil
-	case uint32:
-		return uint64(v), nil
-	case uint64:
-		return v, nil
-	case int:
-		if v >= 0 {
-			return uint64(v), nil
-		}
-	case int8:
-		if v >= 0 {
-			return uint64(v), nil
-		}
-	case int16:
-		if v >= 0 {
-			return uint64(v), nil
-		}
-	case int32:
-		if v >= 0 {
-			return uint64(v), nil
-		}
-	case int64:
-		if v >= 0 {
-			return uint64(v), nil
-		}
-	case float32:
-		if v >= 0 && 18446744073709551615 >= v {
-			return uint64(v), nil
-		}
+// 		if rv.Kind() == reflect.Slice {
+// 			aLen := rv.Len()
+// 			uints := make([]uint64, aLen)
+// 			for i := 0; i < aLen; i++ {
+// 				iv, err := toUint64(rv.Index(i).Interface())
+// 				if err != nil {
+// 					return nil, errType(value, "uint64Array")
+// 				}
+// 				uints[i] = iv
+// 			}
+// 			return uints, nil
+// 		}
+// 	}
+// 	return nil, errType(value, "uint64Array")
+// }
 
-		if v < 0 {
-			if math.IsNaN(float64(v)) {
-				return 0, nil
-			}
-			if int64(v) == 0 {
-				return 0, nil
-			}
-		}
-	case float64:
-		if v >= 0 && 18446744073709551615 >= v {
-			return uint64(v), nil
-		}
+// func toUint64(value interface{}) (uint64, error) {
+// 	switch v := value.(type) {
+// 	case []byte:
+// 		i64, err := strconv.ParseUint(string(v), 10, 64)
+// 		if nil == err {
+// 			return i64, nil
+// 		}
+// 	case string:
+// 		i64, err := strconv.ParseUint(v, 10, 64)
+// 		if nil == err {
+// 			return i64, nil
+// 		}
+// 		return i64, errType(value, "uint64")
 
-		if v < 0 {
-			if math.IsNaN(v) {
-				return 0, nil
-			}
-			if int64(v) == 0 {
-				return 0, nil
-			}
-		}
-	}
-	if nil == value {
-		return 0, ErrValueNull
-	}
-	return 0, errType(value, "uint64")
-}
+// 	case json.Number:
+// 		i64, err := strconv.ParseUint(v.String(), 10, 64)
+// 		if nil == err {
+// 			return i64, nil
+// 		}
+// 		f64, err := v.Float64()
+// 		if nil == err {
+// 			if f64 >= 0 {
+// 				return uint64(f64), nil
+// 			}
+// 			if f64 < 0 {
+// 				if math.IsNaN(f64) {
+// 					return 0, nil
+// 				}
+// 				if int64(f64) == 0 {
+// 					return 0, nil
+// 				}
+// 			}
+// 		} else {
+// 			return 0, errType(value, "uint64")
+// 		}
+// 	case uint:
+// 		return uint64(v), nil
+// 	case uint8:
+// 		return uint64(v), nil
+// 	case uint16:
+// 		return uint64(v), nil
+// 	case uint32:
+// 		return uint64(v), nil
+// 	case uint64:
+// 		return v, nil
+// 	case int:
+// 		if v >= 0 {
+// 			return uint64(v), nil
+// 		}
+// 	case int8:
+// 		if v >= 0 {
+// 			return uint64(v), nil
+// 		}
+// 	case int16:
+// 		if v >= 0 {
+// 			return uint64(v), nil
+// 		}
+// 	case int32:
+// 		if v >= 0 {
+// 			return uint64(v), nil
+// 		}
+// 	case int64:
+// 		if v >= 0 {
+// 			return uint64(v), nil
+// 		}
+// 	case float32:
+// 		if v >= 0 && 18446744073709551615 >= v {
+// 			return uint64(v), nil
+// 		}
+
+// 		if v < 0 {
+// 			if math.IsNaN(float64(v)) {
+// 				return 0, nil
+// 			}
+// 			if int64(v) == 0 {
+// 				return 0, nil
+// 			}
+// 		}
+// 	case float64:
+// 		if v >= 0 && 18446744073709551615 >= v {
+// 			return uint64(v), nil
+// 		}
+
+// 		if v < 0 {
+// 			if math.IsNaN(v) {
+// 				return 0, nil
+// 			}
+// 			if int64(v) == 0 {
+// 				return 0, nil
+// 			}
+// 		}
+// 	}
+// 	if nil == value {
+// 		return 0, ErrValueNull
+// 	}
+// 	return 0, errType(value, "uint64")
+// }
