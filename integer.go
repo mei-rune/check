@@ -731,10 +731,20 @@ func toInt64(value interface{}) (int64, error) {
 		if nil == err {
 			return i64, nil
 		}
-		f64, err := v.Float64()
+		// f64, err := v.Float64()
+		// if nil == err {
+		// 	return int64(f64), nil
+		// }
+
+	case *json.Number:
+		i64, err := v.Int64()
 		if nil == err {
-			return int64(f64), nil
+			return i64, nil
 		}
+		// f64, err := v.Float64()
+		// if nil == err {
+		// 	return int64(f64), nil
+		// }
 	}
 	if nil == value {
 		return 0, ErrValueNull
