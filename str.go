@@ -202,6 +202,11 @@ func toString(value interface{}) (string, error) {
 		return v.String(), nil
 	case *json.Number:
 		return v.String(), nil
+	case []byte:
+		if v == nil {
+			return "", nil
+		}
+		return string(v), nil
 	case uint:
 		return strconv.FormatUint(uint64(v), 10), nil
 	case uint8:
@@ -223,9 +228,9 @@ func toString(value interface{}) (string, error) {
 	case int64:
 		return strconv.FormatInt(v, 10), nil
 	case float32:
-		return strconv.FormatFloat(float64(v), 'e', -1, 64), nil
+		return strconv.FormatFloat(float64(v), 'f', -1, 64), nil
 	case float64:
-		return strconv.FormatFloat(v, 'e', -1, 64), nil
+		return strconv.FormatFloat(v, 'f', -1, 64), nil
 	case bool:
 		if v {
 			return "true", nil
@@ -250,6 +255,9 @@ func toStrings(argValue interface{}) ([]string, error) {
 		rv = rv.Elem()
 	}
 	if rv.Kind() != reflect.Slice {
+		if s, ok := argValue.(string); ok {
+			return strings.Split(s, ","), nil
+		}
 		return nil, errType(argValue, "string array")
 	}
 	aLen := rv.Len()
@@ -257,10 +265,17 @@ func toStrings(argValue interface{}) ([]string, error) {
 	for i := 0; i < aLen; i++ {
 		v := rv.Index(i)
 
-		if v.IsNil() {
+		if !v.IsValid() {
 			continue
 		}
-		s, e := toString(v)
+
+		if v.Type().Kind() == reflect.Ptr {
+			if v.IsNil() {
+				continue
+			}
+		}
+
+		s, e := toString(v.Interface())
 		if e != nil {
 			return nil, e
 		}

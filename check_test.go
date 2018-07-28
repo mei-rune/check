@@ -242,6 +242,12 @@ func TestChecker(t *testing.T) {
 	all_check_data = append(all_check_data, check_data{t: "string", operator: "contains_with_ignore_case", operant: "a", value: "Abc", excepted_status: true})
 	all_check_data = append(all_check_data, check_data{t: "string", operator: "not_contains_with_ignore_case", operant: "a", value: "Abc", excepted_status: false})
 
+	for _, operant := range []interface{}{[]string{"11", "22"}, []int{11, 22}, "11,22", []interface{}{11, 22}, []interface{}{"11", "22"}} {
+		for _, v := range []interface{}{n11, &n11, "11", []byte("11"), uint(11), uint8(11), uint16(11), uint32(11), uint64(11), int(11), int8(11), int16(11), int32(11), int64(11), float32(11), float64(11)} {
+			all_check_data = append(all_check_data, check_data{t: "string", operator: "in", operant: operant, value: v, excepted_status: true})
+			all_check_data = append(all_check_data, check_data{t: "string", operator: "nin", operant: operant, value: v, excepted_status: false})
+		}
+	}
 	for _, test := range all_check_data {
 		check, e := MakeChecker(test.t, test.operator, test.operant)
 		if nil != e {
