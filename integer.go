@@ -378,7 +378,7 @@ func numberCheck(argValue interface{}) (func(value interface{}) (int, error), er
 }
 
 func init() {
-	AddCheckFunc(">", "integer", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	AddCheckFunc(">", "", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		cmp, err := numberCheck(argValue)
 		if err != nil {
 			return nil, ErrArgumentType(">", "integer", argValue)
@@ -393,7 +393,7 @@ func init() {
 		}), nil
 	}))
 
-	AddCheckFunc(">=", "integer", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	AddCheckFunc(">=", "", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		cmp, err := numberCheck(argValue)
 		if err != nil {
 			return nil, ErrArgumentType(">=", "integer", argValue)
@@ -409,7 +409,7 @@ func init() {
 		}), nil
 	}))
 
-	AddCheckFunc("<", "integer", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	AddCheckFunc("<", "", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		cmp, err := numberCheck(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("<", "integer", argValue)
@@ -423,7 +423,7 @@ func init() {
 		}), nil
 	}))
 
-	AddCheckFunc("<=", "integer", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	AddCheckFunc("<=", "", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		cmp, err := numberCheck(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("<=", "integer", argValue)
@@ -434,34 +434,6 @@ func init() {
 				return false, ErrActualType("<=", "integer", value)
 			}
 			return r >= 0, nil
-		}), nil
-	}))
-
-	AddCheckFunc("=", "integer", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		cmp, err := numberCheck(argValue)
-		if err != nil {
-			return nil, ErrArgumentType("=", "integer", argValue)
-		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			r, err := cmp(value)
-			if err != nil {
-				return false, ErrActualType("=", "integer", value)
-			}
-			return r == 0, nil
-		}), nil
-	}))
-
-	AddCheckFunc("!=", "integer", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		cmp, err := numberCheck(argValue)
-		if err != nil {
-			return nil, ErrArgumentType("!=", "integer", argValue)
-		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			r, err := cmp(value)
-			if err != nil {
-				return false, ErrActualType("!=", "integer", value)
-			}
-			return r != 0, nil
 		}), nil
 	}))
 

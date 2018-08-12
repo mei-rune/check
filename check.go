@@ -1,11 +1,8 @@
 package check
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
-	"time"
 
 	spew "github.com/davecgh/go-spew/spew"
 )
@@ -45,11 +42,17 @@ func ErrUnsupportedFunc(op, typ string) error {
 }
 
 func ErrArgumentType(op, typ string, value interface{}) error {
-	return fmt.Errorf("%s cannot convert to %s", spew.Sprint(value), typ)
+	if typ == "" {
+		typ = "dynamic"
+	}
+	return fmt.Errorf("(%T) %s cannot convert to %s", value, spew.Sprint(value), typ)
 }
 
 func ErrActualType(op, typ string, value interface{}) error {
-	return fmt.Errorf("%s cannot convert to %s", spew.Sprint(value), typ)
+	if typ == "" {
+		typ = "dynamic"
+	}
+	return fmt.Errorf("(%T) %s cannot convert to %s", value, spew.Sprint(value), typ)
 }
 
 type ErrUnexpectedType struct {
@@ -63,6 +66,11 @@ func (e *ErrUnexpectedType) Error() string {
 
 func errType(value interface{}, typ string) error {
 	return &ErrUnexpectedType{value: value, typ: typ}
+}
+
+type TypedCheckFactory struct {
+	Default CheckFactory
+	Types   map[string]CheckFactory
 }
 
 var (
@@ -86,25 +94,20 @@ var (
 		"lte":        "<=",
 		"not_in":     "nin",
 	}
-	CheckFactories = map[string]map[string]CheckFactory{
-		">":   map[string]CheckFactory{},
-		">=":  map[string]CheckFactory{},
-		"<":   map[string]CheckFactory{},
-		"<=":  map[string]CheckFactory{},
-		"=":   map[string]CheckFactory{},
-		"!=":  map[string]CheckFactory{},
-		"in":  map[string]CheckFactory{},
-		"nin": map[string]CheckFactory{},
-	}
+	CheckFactories = map[string]TypedCheckFactory{}
 )
 
 func AddCheckFunc(op, typ string, f CheckFactoryFunc) {
 	byOp := CheckFactories[op]
-	if byOp == nil {
-		byOp = map[string]CheckFactory{}
-		CheckFactories[op] = byOp
+	if byOp.Types == nil {
+		byOp.Types = map[string]CheckFactory{}
 	}
-	byOp[typ] = f
+	if typ == "" {
+		byOp.Default = f
+	} else {
+		byOp.Types[typ] = f
+	}
+	CheckFactories[op] = byOp
 }
 
 func UnsupportedCheckFunc(op, typ string) {
@@ -143,74 +146,44 @@ func getCheckedType(typ string, value interface{}) string {
 }
 
 func MakeChecker(typ, operator string, value interface{}) (Checker, error) {
-	factories := CheckFactories[operator]
-	if factories == nil {
+	factories, ok := CheckFactories[operator]
+	if !ok {
 		alias, ok := OpAlias[operator]
 		if !ok {
 			return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
 		}
-		factories = CheckFactories[alias]
-		if factories == nil {
+		factories, ok = CheckFactories[alias]
+		if !ok {
 			return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
 		}
+	}
+
+	if len(factories.Types) == 0 {
+		if factories.Default == nil {
+			return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
+		}
+		return factories.Default.Create(value)
 	}
 
 	if typ == "" {
-		switch tvalue := value.(type) {
-		case int32:
-			typ = "integer"
-		case int:
-			typ = "integer"
-		case int64:
-			typ = "integer"
-		case uint32:
-			typ = "biginteger"
-		case uint:
-			typ = "biginteger"
-		case uint64:
-			typ = "biginteger"
-		case float32:
-			typ = "decimal"
-		case string:
-			typ = "string"
-		case net.IP:
-			typ = "ipAddress"
-		case *net.IP:
-			typ = "ipAddress"
-		case net.HardwareAddr:
-			typ = "physicalAddress"
-		case *net.HardwareAddr:
-			typ = "physicalAddress"
-		case time.Time:
-			typ = "datetime"
-		case *time.Time:
-			typ = "datetime"
-		case json.Number:
-			if _, err := tvalue.Int64(); err == nil {
-				typ = "integer"
-			} else {
-				typ = "decimal"
-			}
-		case *json.Number:
-			if _, err := tvalue.Int64(); err == nil {
-				typ = "integer"
-			} else {
-				typ = "decimal"
-			}
-		default:
+		if factories.Default == nil {
 			return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
 		}
+		return factories.Default.Create(value)
 	}
 
-	creator := factories[typ]
+	creator := factories.Types[typ]
 	if creator != nil {
 		return creator.Create(value)
 	}
 	if alias, ok := TypeAlias[typ]; ok {
-		creator = factories[alias]
+		creator = factories.Types[alias]
 		if creator != nil {
 			return creator.Create(value)
 		}
+	}
+	if factories.Default != nil {
+		return factories.Default.Create(value)
 	}
 	return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
 }
