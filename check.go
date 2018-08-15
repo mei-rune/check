@@ -61,7 +61,7 @@ type ErrUnexpectedType struct {
 }
 
 func (e *ErrUnexpectedType) Error() string {
-	return fmt.Sprintf("%s cannot convert to %s", spew.Sprint(e.value), e.typ)
+	return fmt.Sprintf("(%T) %s cannot convert to %s", e.value, spew.Sprint(e.value), e.typ)
 }
 
 func errType(value interface{}, typ string) error {
@@ -77,6 +77,9 @@ var (
 	TypeAlias = map[string]string{
 		"bigInteger": "integer",
 		"biginteger": "integer",
+		"objectid":   "integer",
+		"objectId":   "integer",
+		"objectID":   "integer",
 	}
 	OpAlias = map[string]string{
 		"<>":         "!=",
@@ -112,27 +115,6 @@ func AddCheckFunc(op, typ string, f CheckFactoryFunc) {
 
 func UnsupportedCheckFunc(op, typ string) {
 	AddCheckFunc(op, typ, notSupport(ErrUnsupportedFunc(op, typ)))
-}
-
-func init() {
-
-	// UnsupportedCheckFunc(">", "password")
-	// UnsupportedCheckFunc(">=", "password")
-	// UnsupportedCheckFunc("<", "password")
-	// UnsupportedCheckFunc("<=", "password")
-	// UnsupportedCheckFunc("=", "password")
-	// UnsupportedCheckFunc("!=", "password")
-	// UnsupportedCheckFunc("in", "password")
-	// UnsupportedCheckFunc("nin", "password")
-
-	UnsupportedCheckFunc(">", "dynamic")
-	UnsupportedCheckFunc(">=", "dynamic")
-	UnsupportedCheckFunc("<", "dynamic")
-	UnsupportedCheckFunc("<=", "dynamic")
-	UnsupportedCheckFunc("=", "dynamic")
-	UnsupportedCheckFunc("!=", "dynamic")
-	UnsupportedCheckFunc("in", "dynamic")
-	UnsupportedCheckFunc("nin", "dynamic")
 }
 
 func getCheckedType(typ string, value interface{}) string {
