@@ -55,6 +55,7 @@ func TestInChecker(t *testing.T) {
 				all_check_data = append(all_check_data, check_data{t: class, operator: "nin", operant: []interface{}{operant}, value: v, excepted_status: false})
 			}
 
+			ss := [2]string{"11", "12"}
 			aa = []interface{}{
 				[]uint{uint(11), uint(12)},
 				[]uint16{uint16(11), uint16(12)},
@@ -72,6 +73,7 @@ func TestInChecker(t *testing.T) {
 				"11,12",
 				[]string{"11", "12"},
 				[2]string{"11", "12"},
+				&ss,
 			}
 			if class != "" {
 				aa = append(aa, []uint8{uint8(11), uint8(12)})
