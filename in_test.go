@@ -40,6 +40,10 @@ func TestInChecker(t *testing.T) {
 			for _, operant := range aa {
 				all_check_data = append(all_check_data, check_data{t: class, operator: "in", operant: []interface{}{operant}, value: v, excepted_status: false})
 				all_check_data = append(all_check_data, check_data{t: class, operator: "nin", operant: []interface{}{operant}, value: v, excepted_status: true})
+
+				all_check_data = append(all_check_data, check_data{t: class, operator: "in", operant: operant, value: v, excepted_status: false})
+				all_check_data = append(all_check_data, check_data{t: class, operator: "nin", operant: operant, value: v, excepted_status: true})
+
 			}
 			aa = []interface{}{n12, &n12, "12", uint(12), uint8(12), uint16(12), uint32(12), uint64(12), int(12), int8(12), int16(12), int32(12), int64(12)}
 			if class != "" {

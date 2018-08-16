@@ -65,7 +65,6 @@ func (e *ErrUnexpectedType) Error() string {
 }
 
 func errType(value interface{}, typ string) error {
-	panic("")
 	return &ErrUnexpectedType{value: value, typ: typ}
 }
 
