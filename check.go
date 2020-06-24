@@ -49,11 +49,17 @@ func ErrArgumentValue(op string, value interface{}) error {
 }
 
 func ErrArgumentType(op, typ string, value interface{}) error {
-	return fmt.Errorf("%s cannot convert to %s", spew.Sprint(value), typ)
+	if typ == "" {
+		typ = "dynamic"
+	}
+	return fmt.Errorf("(%T) %s cannot convert to %s", value, spew.Sprint(value), typ)
 }
 
 func ErrActualType(op, typ string, value interface{}) error {
-	return fmt.Errorf("%s cannot convert to %s", spew.Sprint(value), typ)
+	if typ == "" {
+		typ = "dynamic"
+	}
+	return fmt.Errorf("(%T) %s cannot convert to %s", value, spew.Sprint(value), typ)
 }
 
 type ErrUnexpectedType struct {
@@ -62,17 +68,25 @@ type ErrUnexpectedType struct {
 }
 
 func (e *ErrUnexpectedType) Error() string {
-	return fmt.Sprintf("%s cannot convert to %s", spew.Sprint(e.value), e.typ)
+	return fmt.Sprintf("(%T) %s cannot convert to %s", e.value, spew.Sprint(e.value), e.typ)
 }
 
 func errType(value interface{}, typ string) error {
 	return &ErrUnexpectedType{value: value, typ: typ}
 }
 
+type TypedCheckFactory struct {
+	Default CheckFactory
+	Types   map[string]CheckFactory
+}
+
 var (
 	TypeAlias = map[string]string{
 		"bigInteger": "integer",
 		"biginteger": "integer",
+		"objectid":   "integer",
+		"objectId":   "integer",
+		"objectID":   "integer",
 	}
 	OpAlias = map[string]string{
 		"<>":         "!=",
@@ -117,56 +131,52 @@ var (
 		"no_end_with":  "noEndWith",
 		"not_end_with": "noEndWith",
 	}
-	DispatchTypes  = map[string]string{}
-	CheckFactories = map[string]map[string]CheckFactory{
-		">":   map[string]CheckFactory{},
-		">=":  map[string]CheckFactory{},
-		"<":   map[string]CheckFactory{},
-		"<=":  map[string]CheckFactory{},
-		"=":   map[string]CheckFactory{},
-		"!=":  map[string]CheckFactory{},
-		"in":  map[string]CheckFactory{},
-		"nin": map[string]CheckFactory{},
-	}
+
+	// DispatchTypes  = map[string]string{}
+	CheckFactories = map[string]TypedCheckFactory{}
 )
 
 func AddCheckFunc(op, typ string, f CheckFactoryFunc) {
 	byOp := CheckFactories[op]
-	if byOp == nil {
-		byOp = map[string]CheckFactory{}
-		CheckFactories[op] = byOp
+	if byOp.Types == nil {
+		byOp.Types = map[string]CheckFactory{}
 	}
-	byOp[typ] = f
+	if typ == "" {
+		byOp.Default = f
+	} else {
+		byOp.Types[typ] = f
+	}
+	CheckFactories[op] = byOp
 }
 
-func AddDispatchType(op, typ, realType string) {
-	DispatchTypes[op+"-"+typ] = realType
-}
+// func AddDispatchType(op, typ, realType string) {
+// 	DispatchTypes[op+"-"+typ] = realType
+// }
 
 func UnsupportedCheckFunc(op, typ string) {
 	AddCheckFunc(op, typ, notSupport(ErrUnsupportedFunc(op, typ)))
 }
 
-func init() {
-	// UnsupportedCheckFunc(">", "password")
-	// UnsupportedCheckFunc(">=", "password")
-	// UnsupportedCheckFunc("<", "password")
-	// UnsupportedCheckFunc("<=", "password")
-	// UnsupportedCheckFunc("=", "password")
-	// UnsupportedCheckFunc("!=", "password")
-	// UnsupportedCheckFunc("in", "password")
-	// UnsupportedCheckFunc("nin", "password")
+// func init() {
+// 	// UnsupportedCheckFunc(">", "password")
+// 	// UnsupportedCheckFunc(">=", "password")
+// 	// UnsupportedCheckFunc("<", "password")
+// 	// UnsupportedCheckFunc("<=", "password")
+// 	// UnsupportedCheckFunc("=", "password")
+// 	// UnsupportedCheckFunc("!=", "password")
+// 	// UnsupportedCheckFunc("in", "password")
+// 	// UnsupportedCheckFunc("nin", "password")
 
-	AddDispatchType(">", "dynamic", "string")
-	AddDispatchType(">=", "dynamic", "string")
-	AddDispatchType("<", "dynamic", "string")
-	AddDispatchType("<=", "dynamic", "string")
-	AddDispatchType("=", "dynamic", "string")
-	AddDispatchType("!=", "dynamic", "string")
+// 	AddDispatchType(">", "dynamic", "string")
+// 	AddDispatchType(">=", "dynamic", "string")
+// 	AddDispatchType("<", "dynamic", "string")
+// 	AddDispatchType("<=", "dynamic", "string")
+// 	AddDispatchType("=", "dynamic", "string")
+// 	AddDispatchType("!=", "dynamic", "string")
 
-	UnsupportedCheckFunc("in", "dynamic")
-	UnsupportedCheckFunc("nin", "dynamic")
-}
+// 	UnsupportedCheckFunc("in", "dynamic")
+// 	UnsupportedCheckFunc("nin", "dynamic")
+// }
 
 func getCheckedType(typ string, value interface{}) string {
 	if typ != "" {
@@ -179,44 +189,45 @@ func getCheckedType(typ string, value interface{}) string {
 }
 
 func MakeChecker(typ, operator string, value interface{}) (Checker, error) {
-	factories := CheckFactories[operator]
-	if factories == nil {
+	factories, ok := CheckFactories[operator]
+	if !ok {
 		alias, ok := OpAlias[operator]
 		if !ok {
 			return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
 		}
-		factories = CheckFactories[alias]
-		if factories == nil {
+		factories, ok = CheckFactories[alias]
+		if !ok {
 			return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
 		}
 	}
 
-	if typ == "" {
-		typ = guessType(value)
+	if len(factories.Types) == 0 {
+		if factories.Default == nil {
+			return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
+		}
+		return factories.Default.Create(value)
 	}
 
-	creator := factories[typ]
+	if typ == "" {
+		if factories.Default == nil {
+			return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
+		}
+		return factories.Default.Create(value)
+	}
+
+	creator := factories.Types[typ]
 	if creator != nil {
 		return creator.Create(value)
 	}
 	if alias, ok := TypeAlias[typ]; ok {
-		creator = factories[alias]
+		creator = factories.Types[alias]
 		if creator != nil {
 			return creator.Create(value)
 		}
 	}
 
-	opAlias, ok := OpAlias[operator]
-	if !ok {
-		opAlias = operator
-	}
-	if alias, ok := TypeAlias[typ]; ok {
-		creator = factories[DispatchTypes[opAlias+"-"+alias]]
-	} else {
-		creator = factories[DispatchTypes[opAlias+"-"+typ]]
-	}
-	if creator != nil {
-		return creator.Create(value)
+	if factories.Default != nil {
+		return factories.Default.Create(value)
 	}
 	return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
 }

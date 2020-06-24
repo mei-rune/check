@@ -9,101 +9,101 @@ import (
 )
 
 func init() {
-	AddCheckFunc(">", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		cmp, err := numberCheck(argValue)
-		if err != nil {
-			// exceptedValue, err := toString(argValue)
-			// if err != nil {
-			return nil, ErrArgumentType(">", "string", argValue)
-			// }
-			// return CheckFunc(func(value interface{}) (bool, error) {
-			// 	actualValue, err := toString(value)
-			// 	if err != nil {
-			// 		return false, ErrActualType(">", "string", value)
-			// 	}
-			// 	return actualValue > exceptedValue, nil
-			// }), nil
-		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			r, err := cmp(value)
-			if err != nil {
-				return false, ErrActualType(">", "stringNumber", value)
-			}
-			//fmt.Printf("1(%T) %v > (%T) %v   = %v\r\n", argValue, argValue, value, value, r)
-			return r < 0, nil
-		}), nil
-	}))
-	AddCheckFunc(">=", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		cmp, err := numberCheck(argValue)
-		if err != nil {
-			// exceptedValue, err := toString(argValue)
-			// if err != nil {
-			return nil, ErrArgumentType(">=", "string", argValue)
-			// }
-			// return CheckFunc(func(value interface{}) (bool, error) {
-			// 	actualValue, err := toString(value)
-			// 	if err != nil {
-			// 		return false, ErrActualType(">=", "string", value)
-			// 	}
-			// 	return actualValue >= exceptedValue, nil
-			// }), nil
-		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			r, err := cmp(value)
-			if err != nil {
-				return false, ErrActualType(">=", "stringNumber", value)
-			}
+	// AddCheckFunc(">", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	// 	cmp, err := numberCheck(argValue)
+	// 	if err != nil {
+	// 		// exceptedValue, err := toString(argValue)
+	// 		// if err != nil {
+	// 		return nil, ErrArgumentType(">", "string", argValue)
+	// 		// }
+	// 		// return CheckFunc(func(value interface{}) (bool, error) {
+	// 		// 	actualValue, err := toString(value)
+	// 		// 	if err != nil {
+	// 		// 		return false, ErrActualType(">", "string", value)
+	// 		// 	}
+	// 		// 	return actualValue > exceptedValue, nil
+	// 		// }), nil
+	// 	}
+	// 	return CheckFunc(func(value interface{}) (bool, error) {
+	// 		r, err := cmp(value)
+	// 		if err != nil {
+	// 			return false, ErrActualType(">", "stringNumber", value)
+	// 		}
+	// 		//fmt.Printf("1(%T) %v > (%T) %v   = %v\r\n", argValue, argValue, value, value, r)
+	// 		return r < 0, nil
+	// 	}), nil
+	// }))
+	// AddCheckFunc(">=", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	// 	cmp, err := numberCheck(argValue)
+	// 	if err != nil {
+	// 		// exceptedValue, err := toString(argValue)
+	// 		// if err != nil {
+	// 		return nil, ErrArgumentType(">=", "string", argValue)
+	// 		// }
+	// 		// return CheckFunc(func(value interface{}) (bool, error) {
+	// 		// 	actualValue, err := toString(value)
+	// 		// 	if err != nil {
+	// 		// 		return false, ErrActualType(">=", "string", value)
+	// 		// 	}
+	// 		// 	return actualValue >= exceptedValue, nil
+	// 		// }), nil
+	// 	}
+	// 	return CheckFunc(func(value interface{}) (bool, error) {
+	// 		r, err := cmp(value)
+	// 		if err != nil {
+	// 			return false, ErrActualType(">=", "stringNumber", value)
+	// 		}
 
-			//fmt.Printf("2(%T) %v >= (%T) %v   = %v\r\n", argValue, argValue, value, value, r)
-			return r <= 0, nil
-		}), nil
-	}))
-	AddCheckFunc("<", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		cmp, err := numberCheck(argValue)
-		if err != nil {
-			// exceptedValue, err := toString(argValue)
-			// if err != nil {
-			return nil, ErrArgumentType("<", "string", argValue)
-			// }
-			// return CheckFunc(func(value interface{}) (bool, error) {
-			// 	actualValue, err := toString(value)
-			// 	if err != nil {
-			// 		return false, ErrActualType("<", "string", value)
-			// 	}
-			// 	return actualValue < exceptedValue, nil
-			// }), nil
-		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			r, err := cmp(value)
-			if err != nil {
-				return false, ErrActualType("<", "stringNumber", value)
-			}
-			return r > 0, nil
-		}), nil
-	}))
-	AddCheckFunc("<=", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		cmp, err := numberCheck(argValue)
-		if err != nil {
-			// exceptedValue, err := toString(argValue)
-			// if err != nil {
-			return nil, ErrArgumentType("<=", "string", argValue)
-			// }
-			// return CheckFunc(func(value interface{}) (bool, error) {
-			// 	actualValue, err := toString(value)
-			// 	if err != nil {
-			// 		return false, ErrActualType("<=", "string", value)
-			// 	}
-			// 	return actualValue <= exceptedValue, nil
-			// }), nil
-		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			r, err := cmp(value)
-			if err != nil {
-				return false, ErrActualType("<=", "stringNumber", value)
-			}
-			return r >= 0, nil
-		}), nil
-	}))
+	// 		//fmt.Printf("2(%T) %v >= (%T) %v   = %v\r\n", argValue, argValue, value, value, r)
+	// 		return r <= 0, nil
+	// 	}), nil
+	// }))
+	// AddCheckFunc("<", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	// 	cmp, err := numberCheck(argValue)
+	// 	if err != nil {
+	// 		// exceptedValue, err := toString(argValue)
+	// 		// if err != nil {
+	// 		return nil, ErrArgumentType("<", "string", argValue)
+	// 		// }
+	// 		// return CheckFunc(func(value interface{}) (bool, error) {
+	// 		// 	actualValue, err := toString(value)
+	// 		// 	if err != nil {
+	// 		// 		return false, ErrActualType("<", "string", value)
+	// 		// 	}
+	// 		// 	return actualValue < exceptedValue, nil
+	// 		// }), nil
+	// 	}
+	// 	return CheckFunc(func(value interface{}) (bool, error) {
+	// 		r, err := cmp(value)
+	// 		if err != nil {
+	// 			return false, ErrActualType("<", "stringNumber", value)
+	// 		}
+	// 		return r > 0, nil
+	// 	}), nil
+	// }))
+	// AddCheckFunc("<=", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	// 	cmp, err := numberCheck(argValue)
+	// 	if err != nil {
+	// 		// exceptedValue, err := toString(argValue)
+	// 		// if err != nil {
+	// 		return nil, ErrArgumentType("<=", "string", argValue)
+	// 		// }
+	// 		// return CheckFunc(func(value interface{}) (bool, error) {
+	// 		// 	actualValue, err := toString(value)
+	// 		// 	if err != nil {
+	// 		// 		return false, ErrActualType("<=", "string", value)
+	// 		// 	}
+	// 		// 	return actualValue <= exceptedValue, nil
+	// 		// }), nil
+	// 	}
+	// 	return CheckFunc(func(value interface{}) (bool, error) {
+	// 		r, err := cmp(value)
+	// 		if err != nil {
+	// 			return false, ErrActualType("<=", "stringNumber", value)
+	// 		}
+	// 		return r >= 0, nil
+	// 	}), nil
+	// }))
 
 	strEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
