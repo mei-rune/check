@@ -117,6 +117,7 @@ var (
 		"no_end_with":  "noEndWith",
 		"not_end_with": "noEndWith",
 	}
+	DispatchTypes  = map[string]string{}
 	CheckFactories = map[string]map[string]CheckFactory{
 		">":   map[string]CheckFactory{},
 		">=":  map[string]CheckFactory{},
@@ -138,12 +139,15 @@ func AddCheckFunc(op, typ string, f CheckFactoryFunc) {
 	byOp[typ] = f
 }
 
+func AddDispatchType(op, typ, realType string) {
+	DispatchTypes[op+"-"+typ] = realType
+}
+
 func UnsupportedCheckFunc(op, typ string) {
 	AddCheckFunc(op, typ, notSupport(ErrUnsupportedFunc(op, typ)))
 }
 
 func init() {
-
 	// UnsupportedCheckFunc(">", "password")
 	// UnsupportedCheckFunc(">=", "password")
 	// UnsupportedCheckFunc("<", "password")
@@ -153,12 +157,13 @@ func init() {
 	// UnsupportedCheckFunc("in", "password")
 	// UnsupportedCheckFunc("nin", "password")
 
-	UnsupportedCheckFunc(">", "dynamic")
-	UnsupportedCheckFunc(">=", "dynamic")
-	UnsupportedCheckFunc("<", "dynamic")
-	UnsupportedCheckFunc("<=", "dynamic")
-	UnsupportedCheckFunc("=", "dynamic")
-	UnsupportedCheckFunc("!=", "dynamic")
+	AddDispatchType(">", "dynamic", "string")
+	AddDispatchType(">=", "dynamic", "string")
+	AddDispatchType("<", "dynamic", "string")
+	AddDispatchType("<=", "dynamic", "string")
+	AddDispatchType("=", "dynamic", "string")
+	AddDispatchType("!=", "dynamic", "string")
+
 	UnsupportedCheckFunc("in", "dynamic")
 	UnsupportedCheckFunc("nin", "dynamic")
 }
@@ -199,6 +204,19 @@ func MakeChecker(typ, operator string, value interface{}) (Checker, error) {
 		if creator != nil {
 			return creator.Create(value)
 		}
+	}
+
+	opAlias, ok := OpAlias[operator]
+	if !ok {
+		opAlias = operator
+	}
+	if alias, ok := TypeAlias[typ]; ok {
+		creator = factories[DispatchTypes[opAlias+"-"+alias]]
+	} else {
+		creator = factories[DispatchTypes[opAlias+"-"+typ]]
+	}
+	if creator != nil {
+		return creator.Create(value)
 	}
 	return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
 }
