@@ -34,7 +34,7 @@ func TestChecker(t *testing.T) {
 	n_11__001 := json.Number("-11.001")
 	// n_12__001 := json.Number("-12.001")
 	n_13__001 := json.Number("-13.001")
-	for _, class := range []string{"integer", "biginteger", "decimal"} {
+	for _, class := range []string{"integer", "biginteger", "decimal", "string"} {
 		for _, v := range []interface{}{n12, &n12, "12", []byte("12"), uint(12), uint8(12), uint16(12), uint32(12), uint64(12), int(12), int8(12), int16(12), int32(12), int64(12), float32(12), float64(12)} {
 			for _, operant := range []interface{}{n11, &n11, "11", []byte("11"), n11__001, &n11__001, "11.001", []byte("11.001"), uint(11), uint8(11), uint16(11), uint32(11), uint64(11), int(11), int8(11), int16(11), int32(11), int64(11), float32(11), float64(11)} {
 				all_check_data = append(all_check_data, check_data{t: class, operator: ">", operant: operant, value: v, excepted_status: true})

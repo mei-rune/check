@@ -3,11 +3,107 @@ package check
 import (
 	"encoding/json"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 )
 
 func init() {
+	AddCheckFunc(">", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		cmp, err := numberCheck(argValue)
+		if err != nil {
+			// exceptedValue, err := toString(argValue)
+			// if err != nil {
+			return nil, ErrArgumentType(">", "string", argValue)
+			// }
+			// return CheckFunc(func(value interface{}) (bool, error) {
+			// 	actualValue, err := toString(value)
+			// 	if err != nil {
+			// 		return false, ErrActualType(">", "string", value)
+			// 	}
+			// 	return actualValue > exceptedValue, nil
+			// }), nil
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			r, err := cmp(value)
+			if err != nil {
+				return false, ErrActualType(">", "stringNumber", value)
+			}
+			//fmt.Printf("1(%T) %v > (%T) %v   = %v\r\n", argValue, argValue, value, value, r)
+			return r < 0, nil
+		}), nil
+	}))
+	AddCheckFunc(">=", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		cmp, err := numberCheck(argValue)
+		if err != nil {
+			// exceptedValue, err := toString(argValue)
+			// if err != nil {
+			return nil, ErrArgumentType(">=", "string", argValue)
+			// }
+			// return CheckFunc(func(value interface{}) (bool, error) {
+			// 	actualValue, err := toString(value)
+			// 	if err != nil {
+			// 		return false, ErrActualType(">=", "string", value)
+			// 	}
+			// 	return actualValue >= exceptedValue, nil
+			// }), nil
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			r, err := cmp(value)
+			if err != nil {
+				return false, ErrActualType(">=", "stringNumber", value)
+			}
+
+			//fmt.Printf("2(%T) %v >= (%T) %v   = %v\r\n", argValue, argValue, value, value, r)
+			return r <= 0, nil
+		}), nil
+	}))
+	AddCheckFunc("<", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		cmp, err := numberCheck(argValue)
+		if err != nil {
+			// exceptedValue, err := toString(argValue)
+			// if err != nil {
+			return nil, ErrArgumentType("<", "string", argValue)
+			// }
+			// return CheckFunc(func(value interface{}) (bool, error) {
+			// 	actualValue, err := toString(value)
+			// 	if err != nil {
+			// 		return false, ErrActualType("<", "string", value)
+			// 	}
+			// 	return actualValue < exceptedValue, nil
+			// }), nil
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			r, err := cmp(value)
+			if err != nil {
+				return false, ErrActualType("<", "stringNumber", value)
+			}
+			return r > 0, nil
+		}), nil
+	}))
+	AddCheckFunc("<=", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		cmp, err := numberCheck(argValue)
+		if err != nil {
+			// exceptedValue, err := toString(argValue)
+			// if err != nil {
+			return nil, ErrArgumentType("<=", "string", argValue)
+			// }
+			// return CheckFunc(func(value interface{}) (bool, error) {
+			// 	actualValue, err := toString(value)
+			// 	if err != nil {
+			// 		return false, ErrActualType("<=", "string", value)
+			// 	}
+			// 	return actualValue <= exceptedValue, nil
+			// }), nil
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			r, err := cmp(value)
+			if err != nil {
+				return false, ErrActualType("<=", "stringNumber", value)
+			}
+			return r >= 0, nil
+		}), nil
+	}))
 
 	strEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
@@ -167,7 +263,7 @@ func init() {
 		if err != nil {
 			svalue, ok := argValue.(string)
 			if !ok {
-				return nil, ErrArgumentType("in", "stringArray", argValue)
+				return nil, ErrArgumentType("nin", "stringArray", argValue)
 			}
 			exceptedArray = strings.Split(svalue, ",")
 			exceptedArray = append(exceptedArray, svalue)
@@ -185,6 +281,146 @@ func init() {
 				}
 			}
 			return !found, nil
+		}), nil
+	}))
+
+	startsWith := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		excepted, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("startWith", "string", argValue)
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("startWith", "string", value)
+			}
+			return strings.HasPrefix(actualValue, excepted), nil
+		}), nil
+	})
+
+	AddCheckFunc("startWith", "string", startsWith)
+
+	startsWithIgnorecase := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		excepted, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("startWithIgnorecase", "string", argValue)
+		}
+		excepted = strings.ToLower(excepted)
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("startWithIgnorecase", "string", value)
+			}
+			if len(actualValue) < len(excepted) {
+				return false, nil
+			}
+			return strings.ToLower(actualValue[:len(excepted)]) == excepted, nil
+		}), nil
+	})
+
+	AddCheckFunc("startWithIgnorecase", "string", startsWithIgnorecase)
+
+	noStartsWith := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		excepted, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("noStartWith", "string", argValue)
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("noStartWith", "string", value)
+			}
+			return !strings.HasPrefix(actualValue, excepted), nil
+		}), nil
+	})
+	AddCheckFunc("noStartWith", "string", noStartsWith)
+
+	endsWith := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		excepted, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("endWith", "string", argValue)
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("endWith", "string", value)
+			}
+			return strings.HasSuffix(actualValue, excepted), nil
+		}), nil
+	})
+	AddCheckFunc("endWith", "string", endsWith)
+
+	endsWithIgnorecase := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		excepted, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("endWithIgnorecase", "string", argValue)
+		}
+		excepted = strings.ToLower(excepted)
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("endWithIgnorecase", "string", value)
+			}
+			if len(actualValue) < len(excepted) {
+				return false, nil
+			}
+			return strings.ToLower(actualValue[len(actualValue)-len(excepted):]) == excepted, nil
+		}), nil
+	})
+	AddCheckFunc("endWithIgnorecase", "string", endsWithIgnorecase)
+
+	noEndsWith := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		excepted, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("noEndWith", "string", argValue)
+		}
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("noEndWith", "string", value)
+			}
+			return !strings.HasSuffix(actualValue, excepted), nil
+		}), nil
+	})
+	AddCheckFunc("noEndWith", "string", noEndsWith)
+
+	AddCheckFunc("match", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		excepted, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("match", "string", argValue)
+		}
+
+		re, err := regexp.Compile(excepted)
+		if err != nil {
+			return nil, ErrArgumentValue("match", excepted)
+		}
+
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("match", "string", value)
+			}
+			return re.MatchString(actualValue), nil
+		}), nil
+	}))
+
+	AddCheckFunc("notmatch", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		excepted, err := toString(argValue)
+		if err != nil {
+			return nil, ErrArgumentType("notmatch", "string", argValue)
+		}
+
+		re, err := regexp.Compile(excepted)
+		if err != nil {
+			return nil, ErrArgumentValue("notmatch", excepted)
+		}
+
+		return CheckFunc(func(value interface{}) (bool, error) {
+			actualValue, err := toString(value)
+			if err != nil {
+				return false, ErrActualType("notmatch", "string", value)
+			}
+			return !re.MatchString(actualValue), nil
 		}), nil
 	}))
 

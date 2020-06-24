@@ -44,6 +44,10 @@ func ErrUnsupportedFunc(op, typ string) error {
 	return errors.New("'" + op + "' is unsupported for the type - " + typ)
 }
 
+func ErrArgumentValue(op string, value interface{}) error {
+	return fmt.Errorf("%s is invalid for '%s'", spew.Sprint(value), op)
+}
+
 func ErrArgumentType(op, typ string, value interface{}) error {
 	return fmt.Errorf("%s cannot convert to %s", spew.Sprint(value), typ)
 }
@@ -85,6 +89,33 @@ var (
 		"lt":         "<",
 		"lte":        "<=",
 		"not_in":     "nin",
+
+		"startsWith": "startWith",
+		"startwith":  "startWith",
+		"start_with": "startWith",
+
+		"noStartsWith":     "noStartWith",
+		"nostartwith":      "noStartWith",
+		"donot_start_with": "noStartWith",
+		"not_start_with":   "noStartWith",
+
+		"startsWithIgnorecase":       "startWithIgnorecase",
+		"startwithIgnorecase":        "startWithIgnorecase",
+		"start_with_ignorecase":      "startWithIgnorecase",
+		"start_with_and_ignore_case": "startWithIgnorecase",
+
+		"endsWith": "endWith",
+		"endwith":  "endWith",
+		"end_with": "endWith",
+
+		"endsWithIgnorecase":       "endWithIgnorecase",
+		"endwithIgnorecase":        "endWithIgnorecase",
+		"end_with_ignore_case":     "endWithIgnorecase",
+		"end_with_and_ignore_case": "endWithIgnorecase",
+
+		"noEndsWith":   "noEndWith",
+		"no_end_with":  "noEndWith",
+		"not_end_with": "noEndWith",
 	}
 	CheckFactories = map[string]map[string]CheckFactory{
 		">":   map[string]CheckFactory{},
@@ -156,50 +187,7 @@ func MakeChecker(typ, operator string, value interface{}) (Checker, error) {
 	}
 
 	if typ == "" {
-		switch tvalue := value.(type) {
-		case int32:
-			typ = "integer"
-		case int:
-			typ = "integer"
-		case int64:
-			typ = "integer"
-		case uint32:
-			typ = "biginteger"
-		case uint:
-			typ = "biginteger"
-		case uint64:
-			typ = "biginteger"
-		case float32:
-			typ = "decimal"
-		case string:
-			typ = "string"
-		case net.IP:
-			typ = "ipAddress"
-		case *net.IP:
-			typ = "ipAddress"
-		case net.HardwareAddr:
-			typ = "physicalAddress"
-		case *net.HardwareAddr:
-			typ = "physicalAddress"
-		case time.Time:
-			typ = "datetime"
-		case *time.Time:
-			typ = "datetime"
-		case json.Number:
-			if _, err := tvalue.Int64(); err == nil {
-				typ = "integer"
-			} else {
-				typ = "decimal"
-			}
-		case *json.Number:
-			if _, err := tvalue.Int64(); err == nil {
-				typ = "integer"
-			} else {
-				typ = "decimal"
-			}
-		default:
-			return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
-		}
+		typ = guessType(value)
 	}
 
 	creator := factories[typ]
@@ -213,4 +201,57 @@ func MakeChecker(typ, operator string, value interface{}) (Checker, error) {
 		}
 	}
 	return nil, ErrUnsupportedFunc(operator, getCheckedType(typ, value))
+}
+
+func guessType(value interface{}) string {
+	switch tvalue := value.(type) {
+	case int32:
+		return "integer"
+	case int:
+		return "integer"
+	case int64:
+		return "integer"
+	case uint32:
+		return "biginteger"
+	case uint:
+		return "biginteger"
+	case uint64:
+		return "biginteger"
+	case float32:
+		return "decimal"
+	case string:
+		return "string"
+	case net.IP:
+		return "ipAddress"
+	case *net.IP:
+		return "ipAddress"
+	case net.HardwareAddr:
+		return "physicalAddress"
+	case *net.HardwareAddr:
+		return "physicalAddress"
+	case time.Time:
+		return "datetime"
+	case *time.Time:
+		return "datetime"
+	case json.Number:
+		if _, err := tvalue.Int64(); err == nil {
+			return "integer"
+		} else {
+			return "decimal"
+		}
+	case *json.Number:
+		if _, err := tvalue.Int64(); err == nil {
+			return "integer"
+		} else {
+			return "decimal"
+		}
+	case []string:
+		return "string"
+	case []int32, []uint32, []int, []uint, []int64, []uint64:
+		return "biginteger"
+	case []interface{}:
+		return guessType(tvalue[0])
+	default:
+		return ""
+	}
 }
