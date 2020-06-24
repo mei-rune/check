@@ -70,8 +70,11 @@ func TestInChecker(t *testing.T) {
 				[]interface{}{n11, n12},
 				[]interface{}{&n11, &n12},
 				[]interface{}{"11", "12"},
+				[]interface{}{"11", 12},
+				[]interface{}{"11", int64(12)},
 				"11,12",
 				[]string{"11", "12"},
+				[2]string{"11", "12"},
 				[2]string{"11", "12"},
 				&ss,
 			}
