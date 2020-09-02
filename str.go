@@ -120,6 +120,7 @@ func init() {
 	})
 	AddCheckFunc("=", "string", strEquals)
 	AddCheckFunc("equals", "string", strEquals)
+	AddCheckFunc("equals", "", strEquals)
 
 	strNotEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
@@ -136,8 +137,9 @@ func init() {
 	})
 	AddCheckFunc("!=", "string", strNotEquals)
 	AddCheckFunc("not_equals", "string", strNotEquals)
+	AddCheckFunc("not_equals", "", strNotEquals)
 
-	AddCheckFunc("contains", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	strContains := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("contains", "string", argValue)
@@ -149,8 +151,11 @@ func init() {
 			}
 			return strings.Contains(actualValue, exceptedValue), nil
 		}), nil
-	}))
-	AddCheckFunc("not_contains", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	})
+	AddCheckFunc("contains", "string", strContains)
+	AddCheckFunc("contains", "", strContains)
+
+	strNotContains := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("not_contains", "string", argValue)
@@ -162,9 +167,11 @@ func init() {
 			}
 			return !strings.Contains(actualValue, exceptedValue), nil
 		}), nil
-	}))
+	})
+	AddCheckFunc("not_contains", "string", strNotContains)
+	AddCheckFunc("not_contains", "", strNotContains)
 
-	AddCheckFunc("contains_with_ignore_case", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	strContainsWithIgnorecase := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("contains_with_ignore_case", "string", argValue)
@@ -180,8 +187,11 @@ func init() {
 			}
 			return strings.Contains(strings.ToLower(actualValue), exceptedValue), nil
 		}), nil
-	}))
-	AddCheckFunc("not_contains_with_ignore_case", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	})
+	AddCheckFunc("contains_with_ignore_case", "string", strContainsWithIgnorecase)
+	AddCheckFunc("contains_with_ignore_case", "", strContainsWithIgnorecase)
+
+	strNotContainsWithIgnorecase := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("not_contains_with_ignore_case", "string", argValue)
@@ -197,9 +207,11 @@ func init() {
 			}
 			return !strings.Contains(strings.ToLower(actualValue), exceptedValue), nil
 		}), nil
-	}))
+	})
+	AddCheckFunc("not_contains_with_ignore_case", "string", strNotContainsWithIgnorecase)
+	AddCheckFunc("not_contains_with_ignore_case", "", strNotContainsWithIgnorecase)
 
-	AddCheckFunc("equals_with_ignore_case", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	strEqualsWithIgnorecase := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("equals_with_ignore_case", "string", argValue)
@@ -215,8 +227,11 @@ func init() {
 			}
 			return strings.ToLower(actualValue) == exceptedValue, nil
 		}), nil
-	}))
-	AddCheckFunc("not_equals_with_ignore_case", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	})
+	AddCheckFunc("equals_with_ignore_case", "string", strEqualsWithIgnorecase)
+	AddCheckFunc("equals_with_ignore_case", "", strEqualsWithIgnorecase)
+
+	strNotEqualsWithIgnorecase := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedValue, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("not_equals_with_ignore_case", "string", argValue)
@@ -232,7 +247,9 @@ func init() {
 			}
 			return strings.ToLower(actualValue) != exceptedValue, nil
 		}), nil
-	}))
+	})
+	AddCheckFunc("not_equals_with_ignore_case", "string", strNotEqualsWithIgnorecase)
+	AddCheckFunc("not_equals_with_ignore_case", "", strNotEqualsWithIgnorecase)
 
 	AddCheckFunc("in", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		exceptedArray, err := toStrings(argValue)
@@ -299,6 +316,7 @@ func init() {
 	})
 
 	AddCheckFunc("startWith", "string", startsWith)
+	AddCheckFunc("startWith", "", startsWith)
 
 	startsWithIgnorecase := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		excepted, err := toString(argValue)
@@ -319,6 +337,7 @@ func init() {
 	})
 
 	AddCheckFunc("startWithIgnorecase", "string", startsWithIgnorecase)
+	AddCheckFunc("startWithIgnorecase", "", startsWithIgnorecase)
 
 	noStartsWith := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		excepted, err := toString(argValue)
@@ -334,6 +353,7 @@ func init() {
 		}), nil
 	})
 	AddCheckFunc("noStartWith", "string", noStartsWith)
+	AddCheckFunc("noStartWith", "", noStartsWith)
 
 	endsWith := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		excepted, err := toString(argValue)
@@ -349,6 +369,7 @@ func init() {
 		}), nil
 	})
 	AddCheckFunc("endWith", "string", endsWith)
+	AddCheckFunc("endWith", "", endsWith)
 
 	endsWithIgnorecase := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		excepted, err := toString(argValue)
@@ -368,6 +389,7 @@ func init() {
 		}), nil
 	})
 	AddCheckFunc("endWithIgnorecase", "string", endsWithIgnorecase)
+	AddCheckFunc("endWithIgnorecase", "", endsWithIgnorecase)
 
 	noEndsWith := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		excepted, err := toString(argValue)
@@ -383,8 +405,9 @@ func init() {
 		}), nil
 	})
 	AddCheckFunc("noEndWith", "string", noEndsWith)
+	AddCheckFunc("noEndWith", "", noEndsWith)
 
-	AddCheckFunc("match", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	strMatch := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		excepted, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("match", "string", argValue)
@@ -402,9 +425,11 @@ func init() {
 			}
 			return re.MatchString(actualValue), nil
 		}), nil
-	}))
+	})
+	AddCheckFunc("match", "string", strMatch)
+	AddCheckFunc("match", "", strMatch)
 
-	AddCheckFunc("notmatch", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	strNotMatch := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		excepted, err := toString(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("notmatch", "string", argValue)
@@ -422,8 +447,9 @@ func init() {
 			}
 			return !re.MatchString(actualValue), nil
 		}), nil
-	}))
-
+	})
+	AddCheckFunc("notmatch", "string", strNotMatch)
+	AddCheckFunc("notmatch", "", strNotMatch)
 }
 
 func toString(value interface{}) (string, error) {

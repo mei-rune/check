@@ -343,7 +343,7 @@ func dynamicEquals(argValue interface{}) (func(value interface{}) (bool, error),
 }
 
 func init() {
-	AddCheckFunc("=", "", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	anyEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		cmp, err := dynamicEquals(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("=", "", argValue)
@@ -355,9 +355,9 @@ func init() {
 			}
 			return r, nil
 		}), nil
-	}))
+	})
 
-	AddCheckFunc("!=", "", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	anyNotEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		cmp, err := dynamicEquals(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("!=", "", argValue)
@@ -369,5 +369,10 @@ func init() {
 			}
 			return !r, nil
 		}), nil
-	}))
+	})
+
+	AddCheckFunc("=", "", anyEquals)
+	AddCheckFunc("equals", "", anyEquals)
+	AddCheckFunc("!=", "", anyNotEquals)
+	AddCheckFunc("not_equals", "", anyNotEquals)
 }
