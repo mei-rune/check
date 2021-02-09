@@ -278,7 +278,7 @@ func boolEquals(b bool) func(value interface{}) (bool, error) {
 	}
 }
 
-func dynamicEquals(argValue interface{}) (func(value interface{}) (bool, error), error) {
+func DynamicEquals(argValue interface{}) (func(value interface{}) (bool, error), error) {
 	switch v := argValue.(type) {
 	case bool:
 		return boolEquals(v), nil
@@ -344,7 +344,7 @@ func dynamicEquals(argValue interface{}) (func(value interface{}) (bool, error),
 
 func init() {
 	anyEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		cmp, err := dynamicEquals(argValue)
+		cmp, err := DynamicEquals(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("=", "", argValue)
 		}
@@ -358,7 +358,7 @@ func init() {
 	})
 
 	anyNotEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		cmp, err := dynamicEquals(argValue)
+		cmp, err := DynamicEquals(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("!=", "", argValue)
 		}
