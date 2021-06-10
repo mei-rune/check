@@ -298,7 +298,7 @@ func asUint64(a interface{}, mustInt bool) (uint64, bool) {
 		return uint64(i), true
 
 	case float32:
-		if mustInt {
+		if !mustInt {
 			if i < 0 {
 				return 0, false
 			}
@@ -308,7 +308,7 @@ func asUint64(a interface{}, mustInt bool) (uint64, bool) {
 			return uint64(i), true
 		}
 	case float64:
-		if mustInt {
+		if !mustInt {
 			if i < 0 {
 				return 0, false
 			}
@@ -328,7 +328,7 @@ func asUint64(a interface{}, mustInt bool) (uint64, bool) {
 			return i64, true
 		}
 	case []byte:
-		if mustInt {
+		if !mustInt {
 			if len(i) == 0 {
 				return 0, false
 			}
@@ -339,7 +339,7 @@ func asUint64(a interface{}, mustInt bool) (uint64, bool) {
 			}
 		}
 	case string:
-		if mustInt {
+		if !mustInt {
 			u64, err := strconv.ParseUint(i, 10, 64)
 			if err == nil {
 				return u64, true
@@ -378,14 +378,14 @@ func asInt64(a interface{}, mustInt bool) (int64, bool) {
 	case int64:
 		return i, true
 	case float32:
-		if mustInt {
+		if !mustInt {
 			if i > math.MaxInt64 {
 				return 0, false
 			}
 			return int64(i), true
 		}
 	case float64:
-		if mustInt {
+		if !mustInt {
 			if i > math.MaxInt64 {
 				return 0, false
 			}
@@ -402,7 +402,7 @@ func asInt64(a interface{}, mustInt bool) (int64, bool) {
 			return i64, true
 		}
 	case []byte:
-		if mustInt {
+		if !mustInt {
 			if len(i) == 0 {
 				return 0, false
 			}
@@ -413,12 +413,70 @@ func asInt64(a interface{}, mustInt bool) (int64, bool) {
 			}
 		}
 	case string:
-		if mustInt {
+		if !mustInt {
 			i64, err := strconv.ParseInt(i, 10, 64)
 			if err == nil {
 				return i64, true
 			}
 		}
+	}
+	return 0, false
+}
+
+func asFloat64(a interface{}) (float64, bool) {
+	switch i := a.(type) {
+	case uint:
+		return float64(i), true
+	case uint8:
+		return float64(i), true
+	case uint16:
+		return float64(i), true
+	case uint32:
+		return float64(i), true
+	case uint64:
+		return float64(i), true
+	case int:
+		return float64(i), true
+	case int8:
+		return float64(i), true
+	case int16:
+		return float64(i), true
+	case int32:
+		return float64(i), true
+	case int64:
+		return float64(i), true
+	case float32:
+			return float64(i), true
+	case float64:
+			return i, true
+	case json.Number:
+		f64, err := strconv.ParseFloat(i.String(), 64)
+		if err == nil {
+			return f64, true
+		}
+	case *json.Number:
+		f64, err := strconv.ParseFloat(i.String(),  64)
+		if err == nil {
+			return f64, true
+		}
+	// case []byte:
+	// 	if mustInt {
+	// 		if len(i) == 0 {
+	// 			return 0, false
+	// 		}
+
+	// 		f64, err := strconv.ParseFloat(string(i), 10, 64)
+	// 		if err == nil {
+	// 			return f64, true
+	// 		}
+	// 	}
+	case string:
+		// if mustInt {
+			f64, err := strconv.ParseFloat(i, 64)
+			if err == nil {
+				return f64, true
+			}
+		// }
 	}
 	return 0, false
 }

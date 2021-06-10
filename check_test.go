@@ -220,6 +220,13 @@ func TestChecker(t *testing.T) {
 			for _, operant := range []interface{}{n13, &n13, "13", []byte("13"), uint(13), uint8(13), uint16(13), uint32(13), uint64(13), int(13), int8(13), int16(13), int32(13), int64(13), float32(13), float64(13)} {
 				all_check_data = append(all_check_data, check_data{t: class, operator: "<=", operant: operant, value: v, excepted_status: true})
 			}
+
+
+			if _, ok := v.([]byte); !ok {
+			for _, operant := range []interface{}{"11,13", []int{11,13}, []int{11,13}, []uint{11,13}, []float64{11,13}, []interface{}{11,13}, []interface{}{"11","13"}} {
+				all_check_data = append(all_check_data, check_data{t: class, operator: "between", operant: operant, value: v, excepted_status: true})
+			}
+		}
 		}
 	}
 
