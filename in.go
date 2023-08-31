@@ -446,16 +446,16 @@ func asFloat64(a interface{}) (float64, bool) {
 	case int64:
 		return float64(i), true
 	case float32:
-			return float64(i), true
+		return float64(i), true
 	case float64:
-			return i, true
+		return i, true
 	case json.Number:
 		f64, err := strconv.ParseFloat(i.String(), 64)
 		if err == nil {
 			return f64, true
 		}
 	case *json.Number:
-		f64, err := strconv.ParseFloat(i.String(),  64)
+		f64, err := strconv.ParseFloat(i.String(), 64)
 		if err == nil {
 			return f64, true
 		}
@@ -472,10 +472,10 @@ func asFloat64(a interface{}) (float64, bool) {
 	// 	}
 	case string:
 		// if mustInt {
-			f64, err := strconv.ParseFloat(i, 64)
-			if err == nil {
-				return f64, true
-			}
+		f64, err := strconv.ParseFloat(i, 64)
+		if err == nil {
+			return f64, true
+		}
 		// }
 	}
 	return 0, false
@@ -484,7 +484,7 @@ func asFloat64(a interface{}) (float64, bool) {
 func inArrayCheck(exceptedArray []interface{}, mustInt bool) (func(interface{}) (bool, error), error) {
 	ints := make([]int64, len(exceptedArray))
 	for i, a := range exceptedArray {
-		iv, ok := asInt64(a, mustInt)
+		iv, ok := asInt64(a, false)
 		if !ok {
 			goto _uint64
 		}
@@ -494,7 +494,7 @@ func inArrayCheck(exceptedArray []interface{}, mustInt bool) (func(interface{}) 
 _uint64:
 	uints := make([]uint64, len(exceptedArray))
 	for i, a := range exceptedArray {
-		iv, ok := asUint64(a, mustInt)
+		iv, ok := asUint64(a, false)
 		if !ok {
 			if mustInt {
 				return nil, errType(exceptedArray, "intArray")
@@ -524,41 +524,99 @@ func inAnyToStringArrayCheck(exceptedArray []interface{}) (func(interface{}) (bo
 	return inStringArrayCheck(ss), nil
 }
 
+func toInt64s(value interface{}, mustInt bool, ss []string) ([]int64, error) {
+	ints := make([]int64, 0, len(ss))
+	for _, s := range ss {
+		if s == "" {
+			continue
+		}
+		if strings.HasSuffix(s, ".0") {
+			s = strings.TrimSuffix(s, ".0")
+		}
+		iv, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			if mustInt {
+				return nil, errType(value, "intArray")
+			}
+		}
+		ints = append(ints, iv)
+	}
+	return ints, nil
+}
+
+func toUint64s(value interface{}, mustInt bool, ss []string) ([]uint64, error) {
+	ints := make([]uint64, 0, len(ss))
+	for _, s := range ss {
+		if s == "" {
+			continue
+		}
+		if strings.HasSuffix(s, ".0") {
+			s = strings.TrimSuffix(s, ".0")
+		}
+		iv, err := strconv.ParseUint(s, 10, 64)
+		if err != nil {
+			if mustInt {
+				return nil, errType(value, "uintArray")
+			}
+		}
+		ints = append(ints, iv)
+	}
+	return ints, nil
+}
+
+func splitStrings(s string, trimSpace, trimEmpty bool) []string {
+	ss := strings.Split(s, ",")
+	if trimSpace {
+		for idx := range ss {
+			ss[idx] = strings.TrimSpace(ss[idx])
+		}
+	}
+
+	if trimEmpty {
+		offset := 0
+		for idx := range ss {
+			if ss[idx] == "" {
+				continue
+			}
+			if offset != idx {
+				ss[offset] = ss[idx]
+			}
+			offset ++
+		}
+		ss = ss[:offset]
+	}
+	return ss
+}
+
 func inCheck(value interface{}, mustInt bool) (func(interface{}) (bool, error), error) {
 	switch a := value.(type) {
 	case string:
-		ss := strings.Split(a, ",")
-		ints := make([]int64, 0, len(ss))
-		for _, s := range ss {
-			if s == "" {
-				continue
-			}
-			iv, err := strconv.ParseInt(s, 10, 64)
-			if err != nil {
-				if mustInt {
-					return nil, errType(value, "intArray")
-				}
-				return inStringArrayCheck(ss), nil
-			}
-			ints = append(ints, iv)
+		ss := splitStrings(a, true, true)
+		ints, err := toInt64s(value, true, ss)
+		if err == nil {
+			return inIntArrayCheck(ints), nil
 		}
-		return inIntArrayCheck(ints), nil
+		uints, err := toUint64s(value, true, ss)
+		if err == nil {
+			return inUintArrayCheck(uints), nil
+		}
+		if mustInt {
+			return nil, errType(value, "intArray")
+		}
+		return inStringArrayCheck(ss), nil
 	case []string:
-		ints := make([]int64, 0, len(a))
-		for _, s := range a {
-			if s == "" {
-				continue
-			}
-			iv, err := strconv.ParseInt(s, 10, 64)
-			if err != nil {
-				if mustInt {
-					return nil, errType(value, "intArray")
-				}
-				return inStringArrayCheck(a), nil
-			}
-			ints = append(ints, iv)
+		ints, err := toInt64s(value, true, a)
+		if err == nil {
+			return inIntArrayCheck(ints), nil
 		}
-		return inIntArrayCheck(ints), nil
+		uints, err := toUint64s(value, true, a)
+		if err == nil {
+			return inUintArrayCheck(uints), nil
+		}
+		if mustInt {
+			return nil, errType(value, "intArray")
+		}
+		return inStringArrayCheck(a), nil
 	case []int64:
 		return inIntArrayCheck(a), nil
 	case []int:

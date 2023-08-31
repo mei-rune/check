@@ -379,6 +379,52 @@ func numberCheck(argValue interface{}) (func(value interface{}) (int, error), er
 }
 
 func init() {
+	AddCheckFunc("=", "integer", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		if s, ok := argValue.(string); ok && strings.Contains(s, ",") {
+					ss := splitStrings(s, true, true)
+					ints, err := toInt64s(argValue, true, ss)
+					if err == nil {
+						cmp := inIntArrayCheck(ints)
+						return CheckFunc(func(value interface{}) (bool, error) {
+										return cmp(value)
+									}), nil
+					}
+					uints, err := toUint64s(argValue, true, ss)
+					if err == nil {
+						cmp := inUintArrayCheck(uints)
+						return CheckFunc(func(value interface{}) (bool, error) {
+										return cmp(value)
+									}), nil
+					}
+					return nil, errType(argValue, "intArray")
+		}
+		return anyEquals(argValue)
+	}))
+
+	AddCheckFunc("!=", "integer", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+		if s, ok := argValue.(string); ok && strings.Contains(s, ",") {
+					ss := splitStrings(s, true, true)
+					ints, err := toInt64s(argValue, true, ss)
+					if err == nil {
+						cmp := inIntArrayCheck(ints)
+						return CheckFunc(func(value interface{}) (bool, error) {
+										ret, err := cmp(value)
+										return !ret, err
+									}), nil
+					}
+					uints, err := toUint64s(argValue, true, ss)
+					if err == nil {
+						cmp := inUintArrayCheck(uints)
+						return CheckFunc(func(value interface{}) (bool, error) {
+										ret, err := cmp(value)
+										return !ret, err
+									}), nil
+					}
+					return nil, errType(argValue, "intArray")
+		}
+		return anyNotEquals(argValue)
+	}))
+
 	AddCheckFunc("in", "integer", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		cmp, err := inCheck(argValue, true)
 		if err != nil {

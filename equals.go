@@ -342,8 +342,7 @@ func DynamicEquals(argValue interface{}) (func(value interface{}) (bool, error),
 	return nil, errType(argValue, "int64")
 }
 
-func init() {
-	anyEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+func anyEquals(argValue interface{}) (Checker, error) {
 		cmp, err := DynamicEquals(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("=", "", argValue)
@@ -355,9 +354,9 @@ func init() {
 			}
 			return r, nil
 		}), nil
-	})
+	}
 
-	anyNotEquals := CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+func anyNotEquals(argValue interface{}) (Checker, error) {
 		cmp, err := DynamicEquals(argValue)
 		if err != nil {
 			return nil, ErrArgumentType("!=", "", argValue)
@@ -369,10 +368,11 @@ func init() {
 			}
 			return !r, nil
 		}), nil
-	})
+	}
 
-	AddCheckFunc("=", "", anyEquals)
-	AddCheckFunc("equals", "", anyEquals)
-	AddCheckFunc("!=", "", anyNotEquals)
-	AddCheckFunc("not_equals", "", anyNotEquals)
+func init() {
+	AddCheckFunc("=", "", CheckFactoryFunc(anyEquals))
+	AddCheckFunc("equals", "", CheckFactoryFunc(anyEquals))
+	AddCheckFunc("!=", "", CheckFactoryFunc(anyNotEquals))
+	AddCheckFunc("not_equals", "", CheckFactoryFunc(anyNotEquals))
 }

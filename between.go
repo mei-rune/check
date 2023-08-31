@@ -204,7 +204,7 @@ func intRangeCheck(a, b int64) func(interface{}) (bool, error) {
 			return false, ErrArgumentType("between", "int", value)
 		}
 
-		return  a<= current && current <= b, nil
+		return a <= current && current <= b, nil
 	}
 }
 
@@ -215,7 +215,7 @@ func uintRangeCheck(a, b uint64) func(interface{}) (bool, error) {
 			return false, ErrArgumentType("between", "uint", value)
 		}
 
-		return  a<= current && current <= b, nil
+		return a <= current && current <= b, nil
 	}
 }
 
@@ -226,7 +226,7 @@ func floatRangeCheck(a, b float64) func(interface{}) (bool, error) {
 			return false, ErrArgumentType("between", "float", value)
 		}
 
-		return  a<= current && current <= b, nil
+		return a <= current && current <= b, nil
 	}
 }
 

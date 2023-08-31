@@ -221,13 +221,21 @@ func TestChecker(t *testing.T) {
 				all_check_data = append(all_check_data, check_data{t: class, operator: "<=", operant: operant, value: v, excepted_status: true})
 			}
 
-
 			if _, ok := v.([]byte); !ok {
-			for _, operant := range []interface{}{"11,13", []int{11,13}, []int{11,13}, []uint{11,13}, []float64{11,13}, []interface{}{11,13}, []interface{}{"11","13"}} {
-				all_check_data = append(all_check_data, check_data{t: class, operator: "between", operant: operant, value: v, excepted_status: true})
+				for _, operant := range []interface{}{"11,13", []int{11, 13}, []int{11, 13}, []uint{11, 13}, []float64{11, 13}, []interface{}{11, 13}, []interface{}{"11", "13"}} {
+					all_check_data = append(all_check_data, check_data{t: class, operator: "between", operant: operant, value: v, excepted_status: true})
+				}
+			}
+		
+
+			if class != "duration" {
+					all_check_data = append(all_check_data, check_data{t: class, operator: "=", operant: "11,12", value: v, excepted_status: true})
+					all_check_data = append(all_check_data, check_data{t: class, operator: "!=", operant: "11,12", value: v, excepted_status: false})
+					all_check_data = append(all_check_data, check_data{t: class, operator: "=", operant: "11,13", value: v, excepted_status: false})
+					all_check_data = append(all_check_data, check_data{t: class, operator: "!=", operant: "11,13", value: v, excepted_status: true})
 			}
 		}
-		}
+
 	}
 
 	for _, class := range []string{"ipAddress", "string"} {
@@ -246,6 +254,13 @@ func TestChecker(t *testing.T) {
 		}
 	}
 
+					all_check_data = append(all_check_data, check_data{t: "ipAddress", operator: "=", operant: "1.1.1.1,1.1.1.2", value: "1.1.1.1", excepted_status: true})
+					all_check_data = append(all_check_data, check_data{t: "ipAddress", operator: "!=", operant: "1.1.1.1,1.1.1.2", value: "1.1.1.1", excepted_status: false})
+					all_check_data = append(all_check_data, check_data{t: "ipAddress", operator: "=", operant: "1.1.1.1,1.1.1.2", value: "1.1.1.3", excepted_status: false})
+					all_check_data = append(all_check_data, check_data{t: "ipAddress", operator: "!=", operant: "1.1.1.1,1.1.1.2", value: "1.1.1.3", excepted_status: true})
+					
+
+
 	for _, class := range []string{"physicalAddress"} {
 		for _, test := range []check_data{
 			{t: class, operator: "=", operant: "19:16:11:ab:01:01", value: "19:16:11:ab:01:01", excepted_status: true},
@@ -261,6 +276,15 @@ func TestChecker(t *testing.T) {
 			all_check_data = append(all_check_data, test)
 		}
 	}
+
+
+					all_check_data = append(all_check_data, check_data{t: "physicalAddress", operator: "=", operant: "19:16:11:ab:01:01,19:16:11:ab:01:02", value: "19:16:11:ab:01:01", excepted_status: true})
+					all_check_data = append(all_check_data, check_data{t: "physicalAddress", operator: "!=", operant: "19:16:11:ab:01:01,19:16:11:ab:01:02", value: "19:16:11:ab:01:01", excepted_status: false})
+					all_check_data = append(all_check_data, check_data{t: "physicalAddress", operator: "=", operant: "19:16:11:ab:01:01,19:16:11:ab:01:02", value: "19:16:11:ab:01:03", excepted_status: false})
+					all_check_data = append(all_check_data, check_data{t: "physicalAddress", operator: "!=", operant: "19:16:11:ab:01:01,19:16:11:ab:01:02", value: "19:16:11:ab:01:03", excepted_status: true})
+
+
+
 	all_check_data = append(all_check_data, check_data{t: "boolean", operator: "=", operant: "true", value: "true", excepted_status: true})
 	all_check_data = append(all_check_data, check_data{t: "boolean", operator: "==", operant: "true", value: "true", excepted_status: true})
 
