@@ -64,6 +64,26 @@ func inIntArrayF(exceptedArray []int64, actualValue float64) bool {
 	return false
 }
 
+func NumberInIntArrayCheck(exceptedArray []int64, actualValue string) (bool, error) {
+	i64, err := strconv.ParseInt(actualValue, 10, 64)
+	if nil == err {
+		return inIntArray(exceptedArray, i64), nil
+	}
+	if strings.HasSuffix(actualValue, ".0") {
+		actualValue = strings.TrimSuffix(actualValue, ".0")
+
+		i64, err = strconv.ParseInt(actualValue, 10, 64)
+		if nil == err {
+			return inIntArray(exceptedArray, i64), nil
+		}
+	}
+	u64, err := strconv.ParseUint(actualValue, 10, 64)
+	if nil == err {
+		return inIntArrayU(exceptedArray, u64), nil
+	}
+	return false, errType(actualValue, "int64")
+}
+
 func inIntArrayCheck(exceptedArray []int64) func(interface{}) (bool, error) {
 	return func(value interface{}) (bool, error) {
 		switch actualValue := value.(type) {
@@ -93,42 +113,13 @@ func inIntArrayCheck(exceptedArray []int64) func(interface{}) (bool, error) {
 			return inIntArrayF(exceptedArray, actualValue), nil
 		case []byte:
 			s := string(actualValue)
-			i64, err := strconv.ParseInt(s, 10, 64)
-			if nil == err {
-				return inIntArray(exceptedArray, i64), nil
-			}
-			u64, err := strconv.ParseUint(s, 10, 64)
-			if nil == err {
-				return inIntArrayU(exceptedArray, u64), nil
-			}
+			return NumberInIntArrayCheck(exceptedArray, s)
 		case string:
-			i64, err := strconv.ParseInt(actualValue, 10, 64)
-			if nil == err {
-				return inIntArray(exceptedArray, i64), nil
-			}
-			u64, err := strconv.ParseUint(actualValue, 10, 64)
-			if nil == err {
-				return inIntArrayU(exceptedArray, u64), nil
-			}
+			return NumberInIntArrayCheck(exceptedArray, actualValue)
 		case json.Number:
-			i64, err := strconv.ParseInt(actualValue.String(), 10, 64)
-			if nil == err {
-				return inIntArray(exceptedArray, i64), nil
-			}
-			u64, err := strconv.ParseUint(actualValue.String(), 10, 64)
-			if nil == err {
-				return inIntArrayU(exceptedArray, u64), nil
-			}
-
+			return NumberInIntArrayCheck(exceptedArray, actualValue.String())
 		case *json.Number:
-			i64, err := strconv.ParseInt(actualValue.String(), 10, 64)
-			if nil == err {
-				return inIntArray(exceptedArray, i64), nil
-			}
-			u64, err := strconv.ParseUint(actualValue.String(), 10, 64)
-			if nil == err {
-				return inIntArrayU(exceptedArray, u64), nil
-			}
+			return NumberInIntArrayCheck(exceptedArray, actualValue.String())
 		}
 		if nil == value {
 			return false, ErrValueNull
@@ -208,32 +199,33 @@ func inUintArrayCheck(exceptedArray []uint64) func(interface{}) (bool, error) {
 			if strings.HasPrefix(s, "-") {
 				return false, nil
 			}
-			u64, err := strconv.ParseUint(s, 10, 64)
-			if nil == err {
+			u64, ok := ParseUint64WithStr(s)
+			if ok {
 				return inUintArray(exceptedArray, u64), nil
 			}
 		case string:
 			if strings.HasPrefix(actualValue, "-") {
 				return false, nil
 			}
-			u64, err := strconv.ParseUint(actualValue, 10, 64)
-			if nil == err {
+			u64, ok := ParseUint64WithStr(actualValue)
+			if ok {
 				return inUintArray(exceptedArray, u64), nil
 			}
 		case json.Number:
 			if strings.HasPrefix(actualValue.String(), "-") {
 				return false, nil
 			}
-			u64, err := strconv.ParseUint(actualValue.String(), 10, 64)
-			if nil == err {
+
+			u64, ok := ParseUint64WithStr(actualValue.String())
+			if ok {
 				return inUintArray(exceptedArray, u64), nil
 			}
 		case *json.Number:
 			if strings.HasPrefix(actualValue.String(), "-") {
 				return false, nil
 			}
-			u64, err := strconv.ParseUint(actualValue.String(), 10, 64)
-			if nil == err {
+			u64, ok := ParseUint64WithStr(actualValue.String())
+			if ok {
 				return inUintArray(exceptedArray, u64), nil
 			}
 		}
@@ -257,6 +249,21 @@ func inStringArrayCheck(exceptedArray []string) func(interface{}) (bool, error) 
 		}
 		return false, nil
 	}
+}
+
+func ParseUint64WithStr(s string) (uint64, bool) {
+	u64, err := strconv.ParseUint(s, 10, 64)
+	if err == nil {
+		return u64, true
+	}
+	if strings.HasSuffix(s, ".0") {
+		s = strings.TrimSuffix(s, ".0")
+	}
+	u64, err = strconv.ParseUint(s, 10, 64)
+	if err == nil {
+		return u64, true
+	}
+	return 0, false
 }
 
 func asUint64(a interface{}, mustInt bool) (uint64, bool) {
@@ -318,14 +325,16 @@ func asUint64(a interface{}, mustInt bool) (uint64, bool) {
 			return uint64(i), true
 		}
 	case json.Number:
-		i64, err := strconv.ParseUint(i.String(), 10, 64)
-		if err == nil {
-			return i64, true
+		s := i.String()
+		u64, ok := ParseUint64WithStr(s)
+		if ok {
+			return u64, true
 		}
 	case *json.Number:
-		i64, err := strconv.ParseUint(i.String(), 10, 64)
-		if err == nil {
-			return i64, true
+		s := i.String()
+		u64, ok := ParseUint64WithStr(s)
+		if ok {
+			return u64, true
 		}
 	case []byte:
 		if !mustInt {
@@ -333,18 +342,33 @@ func asUint64(a interface{}, mustInt bool) (uint64, bool) {
 				return 0, false
 			}
 
-			u64, err := strconv.ParseUint(string(i), 10, 64)
-			if err == nil {
+			u64, ok := ParseUint64WithStr(string(i))
+			if ok {
 				return u64, true
 			}
 		}
 	case string:
 		if !mustInt {
-			u64, err := strconv.ParseUint(i, 10, 64)
-			if err == nil {
+			u64, ok := ParseUint64WithStr(i)
+			if ok {
 				return u64, true
 			}
 		}
+	}
+	return 0, false
+}
+
+func ParseInt64WithStr(s string) (int64, bool) {
+	i64, err := strconv.ParseInt(s, 10, 64)
+	if err == nil {
+		return i64, true
+	}
+	if strings.HasSuffix(s, ".0") {
+		s = strings.TrimSuffix(s, ".0")
+	}
+	i64, err = strconv.ParseInt(s, 10, 64)
+	if err == nil {
+		return i64, true
 	}
 	return 0, false
 }
@@ -392,13 +416,13 @@ func asInt64(a interface{}, mustInt bool) (int64, bool) {
 			return int64(i), true
 		}
 	case json.Number:
-		i64, err := strconv.ParseInt(i.String(), 10, 64)
-		if err == nil {
+		i64, ok := ParseInt64WithStr(i.String())
+		if ok {
 			return i64, true
 		}
 	case *json.Number:
-		i64, err := strconv.ParseInt(i.String(), 10, 64)
-		if err == nil {
+		i64, ok := ParseInt64WithStr(i.String())
+		if ok {
 			return i64, true
 		}
 	case []byte:
@@ -407,15 +431,15 @@ func asInt64(a interface{}, mustInt bool) (int64, bool) {
 				return 0, false
 			}
 
-			i64, err := strconv.ParseInt(string(i), 10, 64)
-			if err == nil {
+			i64, ok := ParseInt64WithStr(string(i))
+			if ok {
 				return i64, true
 			}
 		}
 	case string:
 		if !mustInt {
-			i64, err := strconv.ParseInt(i, 10, 64)
-			if err == nil {
+			i64, ok := ParseInt64WithStr(i)
+			if ok {
 				return i64, true
 			}
 		}
@@ -581,7 +605,7 @@ func splitStrings(s string, trimSpace, trimEmpty bool) []string {
 			if offset != idx {
 				ss[offset] = ss[idx]
 			}
-			offset ++
+			offset++
 		}
 		ss = ss[:offset]
 	}
@@ -703,6 +727,7 @@ func inCheck(value interface{}, mustInt bool) (func(interface{}) (bool, error), 
 			for i := 0; i < aLen; i++ {
 				values[i] = rv.Index(i).Interface()
 			}
+
 			return inArrayCheck(values, mustInt)
 		}
 	}

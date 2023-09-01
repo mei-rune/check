@@ -23,6 +23,9 @@ func floatEquals(exceptedValue float64) func(value interface{}) (bool, error) {
 			}
 			return false, nil
 		case string:
+			if strings.HasSuffix(actualValue, ".0") {
+				actualValue = strings.TrimSuffix(actualValue, ".0")
+			}
 			if u64, e := strconv.ParseUint(actualValue, 10, 64); e == nil {
 				return exceptedValue == float64(u64), nil
 			}
@@ -35,6 +38,9 @@ func floatEquals(exceptedValue float64) func(value interface{}) (bool, error) {
 			return false, nil
 		case json.Number:
 			s := actualValue.String()
+			if strings.HasSuffix(s, ".0") {
+				s = strings.TrimSuffix(s, ".0")
+			}
 			if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
 				return exceptedValue == float64(u64), nil
 			}
@@ -47,6 +53,9 @@ func floatEquals(exceptedValue float64) func(value interface{}) (bool, error) {
 			return false, nil
 		case *json.Number:
 			s := actualValue.String()
+			if strings.HasSuffix(s, ".0") {
+				s = strings.TrimSuffix(s, ".0")
+			}
 			if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
 				return exceptedValue == float64(u64), nil
 			}
@@ -99,14 +108,35 @@ func uintEquals(exceptedValue uint64) func(value interface{}) (bool, error) {
 		case string:
 			return exceptedStr == actualValue, nil
 		case json.Number:
-			if u64, e := strconv.ParseUint(actualValue.String(), 10, 64); e == nil {
+
+			s := actualValue.String()
+			if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
 				return u64 == exceptedValue, nil
 			}
+
+			if strings.HasSuffix(s, ".0") {
+				s = strings.TrimSuffix(s, ".0")
+			}
+
+			if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
+				return u64 == exceptedValue, nil
+			}
+
 			return exceptedStr == actualValue.String(), nil
 		case *json.Number:
-			if u64, e := strconv.ParseUint(actualValue.String(), 10, 64); e == nil {
+			s := actualValue.String()
+			if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
 				return u64 == exceptedValue, nil
 			}
+
+			if strings.HasSuffix(s, ".0") {
+				s = strings.TrimSuffix(s, ".0")
+			}
+
+			if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
+				return u64 == exceptedValue, nil
+			}
+
 			return exceptedStr == actualValue.String(), nil
 		case uint:
 			return uint64(actualValue) == exceptedValue, nil
@@ -161,6 +191,16 @@ func uintEquals(exceptedValue uint64) func(value interface{}) (bool, error) {
 	}
 }
 
+func jsonNumberEquals(exceptedStr, actualValue string) (bool, error) {
+	if exceptedStr == actualValue {
+		return true, nil
+	}
+	if strings.HasSuffix(actualValue, ".0") {
+		actualValue = strings.TrimSuffix(actualValue, ".0")
+		return exceptedStr == actualValue, nil
+	}
+	return false, nil
+}
 func intEquals(exceptedValue int64) func(value interface{}) (bool, error) {
 	exceptedStr := strconv.FormatInt(exceptedValue, 10)
 	return func(value interface{}) (bool, error) {
@@ -169,17 +209,11 @@ func intEquals(exceptedValue int64) func(value interface{}) (bool, error) {
 			actual := string(actualValue)
 			return exceptedStr == actual, nil
 		case string:
-			return exceptedStr == actualValue, nil
+			return jsonNumberEquals(exceptedStr, actualValue)
 		case json.Number:
-			if i64, e := actualValue.Int64(); e == nil {
-				return i64 == exceptedValue, nil
-			}
-			return exceptedStr == actualValue.String(), nil
+			return jsonNumberEquals(exceptedStr, actualValue.String())
 		case *json.Number:
-			if i64, e := actualValue.Int64(); e == nil {
-				return i64 == exceptedValue, nil
-			}
-			return exceptedStr == actualValue.String(), nil
+			return jsonNumberEquals(exceptedStr, actualValue.String())
 		case uint:
 			if exceptedValue < 0 {
 				return false, nil
@@ -312,6 +346,10 @@ func DynamicEquals(argValue interface{}) (func(value interface{}) (bool, error),
 		return stringEquals(v), nil
 	case json.Number:
 		s := v.String()
+		if strings.HasSuffix(s, ".0") {
+			s = strings.TrimSuffix(s, ".0")
+		}
+
 		if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
 			return uintEquals(u64), nil
 		}
@@ -325,6 +363,10 @@ func DynamicEquals(argValue interface{}) (func(value interface{}) (bool, error),
 		return nil, errType(argValue, "number")
 	case *json.Number:
 		s := v.String()
+		if strings.HasSuffix(s, ".0") {
+			s = strings.TrimSuffix(s, ".0")
+		}
+
 		if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
 			return uintEquals(u64), nil
 		}
@@ -343,32 +385,32 @@ func DynamicEquals(argValue interface{}) (func(value interface{}) (bool, error),
 }
 
 func anyEquals(argValue interface{}) (Checker, error) {
-		cmp, err := DynamicEquals(argValue)
-		if err != nil {
-			return nil, ErrArgumentType("=", "", argValue)
-		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			r, err := cmp(value)
-			if err != nil {
-				return false, ErrActualType("=", "", value)
-			}
-			return r, nil
-		}), nil
+	cmp, err := DynamicEquals(argValue)
+	if err != nil {
+		return nil, ErrArgumentType("=", "", argValue)
 	}
+	return CheckFunc(func(value interface{}) (bool, error) {
+		r, err := cmp(value)
+		if err != nil {
+			return false, ErrActualType("=", "", value)
+		}
+		return r, nil
+	}), nil
+}
 
 func anyNotEquals(argValue interface{}) (Checker, error) {
-		cmp, err := DynamicEquals(argValue)
-		if err != nil {
-			return nil, ErrArgumentType("!=", "", argValue)
-		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			r, err := cmp(value)
-			if err != nil {
-				return false, ErrActualType("!=", "", value)
-			}
-			return !r, nil
-		}), nil
+	cmp, err := DynamicEquals(argValue)
+	if err != nil {
+		return nil, ErrArgumentType("!=", "", argValue)
 	}
+	return CheckFunc(func(value interface{}) (bool, error) {
+		r, err := cmp(value)
+		if err != nil {
+			return false, ErrActualType("!=", "", value)
+		}
+		return !r, nil
+	}), nil
+}
 
 func init() {
 	AddCheckFunc("=", "", CheckFactoryFunc(anyEquals))

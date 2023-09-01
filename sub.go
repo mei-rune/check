@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math"
 	"strconv"
+	"strings"
 )
 
 func sub(a, b interface{}) (interface{}, error) {
@@ -48,6 +49,12 @@ func sub(a, b interface{}) (interface{}, error) {
 }
 
 func subStr(a string, b interface{}) (interface{}, error) {
+	if u64, e := strconv.ParseUint(a, 10, 64); e == nil {
+		return subUint64(u64, b)
+	}
+	if strings.HasSuffix(a, ".0") {
+		a = strings.TrimSuffix(a, ".0")
+	}
 	if u64, e := strconv.ParseUint(a, 10, 64); e == nil {
 		return subUint64(u64, b)
 	}
@@ -255,6 +262,12 @@ func int64SubStr(a int64, s string) (interface{}, error) {
 	if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
 		return int64SubUint64(a, u64)
 	}
+	if strings.HasSuffix(s, ".0") {
+		s = strings.TrimSuffix(s, ".0")
+	}
+	if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
+		return int64SubUint64(a, u64)
+	}
 	if i64, e := strconv.ParseInt(s, 10, 64); e == nil {
 		return a - i64, nil
 	}
@@ -265,6 +278,15 @@ func int64SubStr(a int64, s string) (interface{}, error) {
 }
 
 func uint64SubStr(a uint64, s string) (interface{}, error) {
+	if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
+		if a > u64 {
+			return a - u64, nil
+		}
+		return -int64(u64 - a), nil
+	}
+	if strings.HasSuffix(s, ".0") {
+		s = strings.TrimSuffix(s, ".0")
+	}
 	if u64, e := strconv.ParseUint(s, 10, 64); e == nil {
 		if a > u64 {
 			return a - u64, nil

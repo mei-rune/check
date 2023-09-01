@@ -199,23 +199,219 @@ func rangeCheck(a, b string) (func(interface{}) (bool, error), error) {
 
 func intRangeCheck(a, b int64) func(interface{}) (bool, error) {
 	return func(value interface{}) (bool, error) {
-		current, ok := asInt64(value, false)
-		if !ok {
-			return false, ErrArgumentType("between", "int", value)
-		}
+		switch i := value.(type) {
+		case uint64:
+			if b < 0 {
+				return false, nil
+			}
+			if a < 0 {
+				return i < uint64(b), nil
+			}
+			return uint64(a) <= i && i <= uint64(b), nil
+		case uint:
+			if b < 0 {
+				return false, nil
+			}
+			if a < 0 {
+				return i < uint(b), nil
+			}
+			return uint(a) <= i && i <= uint(b), nil
+		case uint8:
+			current := int64(i)
+			return a <= current && current <= b, nil
+		case uint16:
+			current := int64(i)
+			return a <= current && current <= b, nil
+		case uint32:
+			current := int64(i)
+			return a <= current && current <= b, nil
+		case int:
+			current := int64(i)
+			return a <= current && current <= b, nil
+		case int64:
+			return a <= i && i <= b, nil
+		case int8:
+			current := int64(i)
+			return a <= current && current <= b, nil
+		case int16:
+			current := int64(i)
+			return a <= current && current <= b, nil
+		case int32:
+			current := int64(i)
+			return a <= current && current <= b, nil
+		case float32:
+			return float32(a) <= i && i <= float32(b), nil
+		case float64:
+			return float64(a) <= i && i <= float64(b), nil
+		case json.Number:
+			i64, err := i.Int64()
+			if err == nil {
+				return a <= i64 && i64 <= b, nil
+			}
 
-		return a <= current && current <= b, nil
+			f64, err := i.Float64()
+			if err == nil {
+				return float64(a) <= f64 && f64 <= float64(b), nil
+			}
+		case *json.Number:
+			i64, err := i.Int64()
+			if err == nil {
+				return a <= i64 && i64 <= b, nil
+			}
+
+			f64, err := i.Float64()
+			if err == nil {
+				return float64(a) <= f64 && f64 <= float64(b), nil
+			}
+		// case []byte:
+		// 	if !mustInt {
+		// 		if len(i) == 0 {
+		// 			return 0, false
+		// 		}
+
+		// 		u64, err := strconv.ParseUint(string(i), 10, 64)
+		// 		if err == nil {
+		// 			return u64, true
+		// 		}
+		// 	}
+		case string:
+			i64, err := strconv.ParseInt(i, 10, 64)
+			if err == nil {
+				return a <= i64 && i64 <= b, nil
+			}
+
+			f64, err := strconv.ParseFloat(i, 64)
+			if err == nil {
+				return float64(a) <= f64 && f64 <= float64(b), nil
+			}
+		}
+		return false, ErrArgumentType("between", "int", value)
 	}
 }
 
 func uintRangeCheck(a, b uint64) func(interface{}) (bool, error) {
 	return func(value interface{}) (bool, error) {
-		current, ok := asUint64(value, false)
-		if !ok {
-			return false, ErrArgumentType("between", "uint", value)
-		}
+		switch i := value.(type) {
+		case uint64:
+			return a <= i && i <= b, nil
+		case uint:
+			current := uint64(i)
+			return a <= current && current <= b, nil
+		case uint8:
+			current := uint64(i)
+			return a <= current && current <= b, nil
+		case uint16:
+			current := uint64(i)
+			return a <= current && current <= b, nil
+		case uint32:
+			current := uint64(i)
+			return a <= current && current <= b, nil
+		case int:
+			if i < 0 {
+				return false, nil
+			}
+			current := uint64(i)
+			return a <= current && current <= b, nil
+		case int64:
+			if i < 0 {
+				return false, nil
+			}
+			current := uint64(i)
+			return a <= current && current <= b, nil
+		case int8:
+			if i < 0 {
+				return false, nil
+			}
+			current := uint64(i)
+			return a <= current && current <= b, nil
+		case int16:
+			if i < 0 {
+				return false, nil
+			}
+			current := uint64(i)
+			return a <= current && current <= b, nil
+		case int32:
+			if i < 0 {
+				return false, nil
+			}
+			current := uint64(i)
+			return a <= current && current <= b, nil
 
-		return a <= current && current <= b, nil
+		case float32:
+			if i < 0 {
+				return false, nil
+			}
+			return float32(a) <= i && i <= float32(b), nil
+		case float64:
+			if i < 0 {
+				return false, nil
+			}
+			return float64(a) <= i && i <= float64(b), nil
+		case json.Number:
+			i64, err := i.Int64()
+			if err == nil {
+				if i64 < 0 {
+					return false, nil
+				}
+				current := uint64(i64)
+				return a <= current && current <= b, nil
+			}
+
+			f64, err := i.Float64()
+			if err == nil {
+				if f64 < 0 {
+					return false, nil
+				}
+				return float64(a) <= f64 && f64 <= float64(b), nil
+			}
+
+		case *json.Number:
+			i64, err := i.Int64()
+			if err == nil {
+				if i64 < 0 {
+					return false, nil
+				}
+				current := uint64(i64)
+				return a <= current && current <= b, nil
+			}
+
+			f64, err := i.Float64()
+			if err == nil {
+				if f64 < 0 {
+					return false, nil
+				}
+				return float64(a) <= f64 && f64 <= float64(b), nil
+			}
+		// case []byte:
+		// 	if !mustInt {
+		// 		if len(i) == 0 {
+		// 			return 0, false
+		// 		}
+
+		// 		u64, err := strconv.ParseUint(string(i), 10, 64)
+		// 		if err == nil {
+		// 			return u64, true
+		// 		}
+		// 	}
+		case string:
+			i64, err := strconv.ParseInt(i, 10, 64)
+			if err == nil {
+				if i64 < 0 {
+					return false, nil
+				}
+				current := uint64(i64)
+				return a <= current && current <= b, nil
+			}
+
+			f64, err := strconv.ParseFloat(i, 64)
+			if err == nil {
+				if f64 < 0 {
+					return false, nil
+				}
+				return float64(a) <= f64 && f64 <= float64(b), nil
+			}
+		}
+		return false, ErrArgumentType("between", "uint", value)
 	}
 }
 

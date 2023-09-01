@@ -2,6 +2,7 @@ package check
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -110,12 +111,25 @@ func init() {
 		if err != nil {
 			return nil, ErrArgumentType("=", "string", argValue)
 		}
+		exceptedValueWithoutZero := exceptedValue
+		hasZero := strings.HasSuffix(exceptedValue, ".0")
+		if hasZero {
+			exceptedValueWithoutZero = strings.TrimSuffix(exceptedValue, ".0")
+		}
 		return CheckFunc(func(value interface{}) (bool, error) {
 			actualValue, err := toString(value)
 			if err != nil {
 				return false, ErrActualType("=", "string", value)
 			}
-			return actualValue == exceptedValue, nil
+			if actualValue == exceptedValue {
+				return true, nil
+			}
+			if hasZero {
+				if actualValue == exceptedValueWithoutZero {
+					return true, nil
+				}
+			}
+			return strings.TrimSuffix(actualValue, ".0") == exceptedValueWithoutZero, nil
 		}), nil
 	})
 	AddCheckFunc("=", "string", strEquals)
@@ -127,12 +141,27 @@ func init() {
 		if err != nil {
 			return nil, ErrArgumentType("!=", "string", argValue)
 		}
+
+		exceptedValueWithoutZero := exceptedValue
+		hasZero := strings.HasSuffix(exceptedValue, ".0")
+		if hasZero {
+			exceptedValueWithoutZero = strings.TrimSuffix(exceptedValue, ".0")
+		}
+
 		return CheckFunc(func(value interface{}) (bool, error) {
 			actualValue, err := toString(value)
 			if err != nil {
 				return false, ErrActualType("!=", "string", value)
 			}
-			return actualValue != exceptedValue, nil
+			if actualValue == exceptedValue {
+				return false, nil
+			}
+			if hasZero {
+				if actualValue == exceptedValueWithoutZero {
+					return false, nil
+				}
+			}
+			return strings.TrimSuffix(actualValue, ".0") != exceptedValueWithoutZero, nil
 		}), nil
 	})
 	AddCheckFunc("!=", "string", strNotEquals)
@@ -252,52 +281,24 @@ func init() {
 	AddCheckFunc("not_equals_with_ignore_case", "", strNotEqualsWithIgnorecase)
 
 	AddCheckFunc("in", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		exceptedArray, err := toStrings(argValue)
+		cmp, err := stringIn(argValue)
 		if err != nil {
-			svalue, ok := argValue.(string)
-			if !ok {
-				return nil, ErrArgumentType("in", "stringArray", argValue)
-			}
-			exceptedArray = strings.Split(svalue, ",")
-			exceptedArray = append(exceptedArray, svalue)
+			return nil, err
 		}
-		return CheckFunc(func(value interface{}) (bool, error) {
-			actualValue, err := toString(value)
-			if err != nil {
-				return false, ErrActualType("in", "string", value)
-			}
-			for idx := range exceptedArray {
-				if actualValue == exceptedArray[idx] {
-					return true, nil
-				}
-			}
-			return false, nil
-		}), nil
+		return CheckFunc(cmp), nil
 	}))
 
 	AddCheckFunc("nin", "string", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
-		exceptedArray, err := toStrings(argValue)
+		cmp, err := stringIn(argValue)
 		if err != nil {
-			svalue, ok := argValue.(string)
-			if !ok {
-				return nil, ErrArgumentType("nin", "stringArray", argValue)
-			}
-			exceptedArray = strings.Split(svalue, ",")
-			exceptedArray = append(exceptedArray, svalue)
+			return nil, err
 		}
 		return CheckFunc(func(value interface{}) (bool, error) {
-			actualValue, err := toString(value)
+			ok, err := cmp(value)
 			if err != nil {
-				return false, ErrActualType("nin", "string", value)
+				return false, err
 			}
-			found := false
-			for idx := range exceptedArray {
-				if actualValue == exceptedArray[idx] {
-					found = true
-					break
-				}
-			}
-			return !found, nil
+			return !ok, nil
 		}), nil
 	}))
 
@@ -461,7 +462,8 @@ func toString(value interface{}) (string, error) {
 	case string:
 		return v, nil
 	case json.Number:
-		return v.String(), nil
+		s := v.String()
+		return s, nil
 	case *json.Number:
 		return v.String(), nil
 	case []byte:
@@ -501,6 +503,9 @@ func toString(value interface{}) (string, error) {
 		}
 	}
 
+	if st, ok := value.(fmt.Stringer); ok {
+		return st.String(), nil
+	}
 	return "", errType(value, "string")
 }
 
@@ -544,4 +549,162 @@ func toStrings(argValue interface{}) ([]string, error) {
 		results = append(results, s)
 	}
 	return results, nil
+}
+
+func intstringCheckEqual(exceptedArray []string, ints []int64, s string) (bool, error) {
+	for idx := range exceptedArray {
+		if s == exceptedArray[idx] {
+			return true, nil
+		}
+	}
+	i64, ok := ParseInt64WithStr(s)
+	if ok {
+		for _, ex := range ints {
+			if ex == i64 {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+func uintstringCheckEqual(exceptedArray []string, uints []uint64, s string) (bool, error) {
+	for idx := range exceptedArray {
+		if s == exceptedArray[idx] {
+			return true, nil
+		}
+	}
+	u64, ok := ParseUint64WithStr(s)
+	if ok {
+		for _, ex := range uints {
+			if ex == u64 {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+func stringIn(argValue interface{}) (func(interface{}) (bool, error), error) {
+	exceptedArray, err := toStrings(argValue)
+	if err != nil {
+		svalue, ok := argValue.(string)
+		if !ok {
+			return nil, ErrArgumentType("in", "stringArray", argValue)
+		}
+		exceptedArray = strings.Split(svalue, ",")
+		exceptedArray = append(exceptedArray, svalue)
+	}
+
+	ints, err := toInt64s(argValue, true, exceptedArray)
+	if err == nil {
+		return func(value interface{}) (bool, error) {
+			switch s := value.(type) {
+			case string:
+				return intstringCheckEqual(exceptedArray, ints, s)
+			case json.Number:
+				return intstringCheckEqual(exceptedArray, ints, s.String())
+			case *json.Number:
+				return intstringCheckEqual(exceptedArray, ints, s.String())
+			case []byte:
+				return intstringCheckEqual(exceptedArray, ints, string(s))
+			case float64:
+				for _, ex := range ints {
+					if float64(ex) == s {
+						return true, nil
+					}
+				}
+				return false, nil
+			case float32:
+				for _, ex := range ints {
+					if float32(ex) == s {
+						return true, nil
+					}
+				}
+				return false, nil
+			}
+			i64, ok := asInt64(value, true)
+			if ok {
+				for _, ex := range ints {
+					if ex == i64 {
+						return true, nil
+					}
+				}
+				return false, nil
+			}
+			if st, ok := value.(fmt.Stringer); ok {
+				s := st.String()
+				for idx := range exceptedArray {
+					if s == exceptedArray[idx] {
+						return true, nil
+					}
+				}
+				return false, nil
+			}
+			return false, ErrActualType("in", "string", value)
+		}, nil
+	}
+
+	uints, err := toUint64s(argValue, true, exceptedArray)
+	if err == nil {
+		return func(value interface{}) (bool, error) {
+			switch s := value.(type) {
+			case string:
+				return uintstringCheckEqual(exceptedArray, uints, s)
+			case json.Number:
+				return uintstringCheckEqual(exceptedArray, uints, s.String())
+			case *json.Number:
+				return uintstringCheckEqual(exceptedArray, uints, s.String())
+			case []byte:
+				return intstringCheckEqual(exceptedArray, ints, string(s))
+			case float64:
+				for _, ex := range ints {
+					if float64(ex) == s {
+						return true, nil
+					}
+				}
+				return false, nil
+			case float32:
+				for _, ex := range ints {
+					if float32(ex) == s {
+						return true, nil
+					}
+				}
+				return false, nil
+			}
+			u64, ok := asUint64(value, true)
+			if ok {
+				for _, ex := range uints {
+					if ex == u64 {
+						return true, nil
+					}
+				}
+				return false, nil
+			}
+			if st, ok := value.(fmt.Stringer); ok {
+				s := st.String()
+				for idx := range exceptedArray {
+					if s == exceptedArray[idx] {
+						return true, nil
+					}
+				}
+				return false, nil
+			}
+			return false, ErrActualType("in", "string", value)
+		}, nil
+	}
+
+	return func(value interface{}) (bool, error) {
+		actualValue, err := toString(value)
+		if err != nil {
+			return false, ErrActualType("in", "string", value)
+		}
+		for idx := range exceptedArray {
+			if actualValue == exceptedArray[idx] {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	}, nil
 }

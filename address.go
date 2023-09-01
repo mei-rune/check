@@ -242,107 +242,107 @@ func InIPAddressCheck(exceptedArray []string, exceptedAddresses []net.IP) (Check
 	}), nil
 }
 
-func NotInIPAddressCheck(exceptedArray []string, exceptedAddresses []net.IP) (Checker, error){
-		return CheckFunc(func(value interface{}) (bool, error) {
-			switch actualValue := value.(type) {
-			case string:
-				found := false
-				for idx := range exceptedArray {
-					if actualValue == exceptedArray[idx] {
-						found = true
-						break
-					}
+func NotInIPAddressCheck(exceptedArray []string, exceptedAddresses []net.IP) (Checker, error) {
+	return CheckFunc(func(value interface{}) (bool, error) {
+		switch actualValue := value.(type) {
+		case string:
+			found := false
+			for idx := range exceptedArray {
+				if actualValue == exceptedArray[idx] {
+					found = true
+					break
 				}
-				return !found, nil
-			case net.IP:
-				found := false
-				for idx := range exceptedAddresses {
-					if actualValue.Equal(exceptedAddresses[idx]) {
-						found = true
-						break
-					}
-				}
-				return !found, nil
-			case *net.IP:
-				if actualValue == nil {
-					return true, nil
-				}
-				found := false
-				for idx := range exceptedAddresses {
-					if actualValue.Equal(exceptedAddresses[idx]) {
-						found = true
-						break
-					}
-				}
-				return !found, nil
 			}
-			return false, ErrActualType("nin", "ipAddress", value)
-		}), nil
+			return !found, nil
+		case net.IP:
+			found := false
+			for idx := range exceptedAddresses {
+				if actualValue.Equal(exceptedAddresses[idx]) {
+					found = true
+					break
+				}
+			}
+			return !found, nil
+		case *net.IP:
+			if actualValue == nil {
+				return true, nil
+			}
+			found := false
+			for idx := range exceptedAddresses {
+				if actualValue.Equal(exceptedAddresses[idx]) {
+					found = true
+					break
+				}
+			}
+			return !found, nil
+		}
+		return false, ErrActualType("nin", "ipAddress", value)
+	}), nil
 }
 
-func InMacAddressCheck(exceptedArray []string, exceptedAddresses []net.HardwareAddr) (Checker, error){
-		return CheckFunc(func(value interface{}) (bool, error) {
-			switch actualValue := value.(type) {
-			case string:
-				for idx := range exceptedArray {
-					if actualValue == exceptedArray[idx] {
-						return true, nil
-					}
-				}
-				return false, nil
-			case net.HardwareAddr:
-				for idx := range exceptedAddresses {
-					if bytes.Equal(actualValue, exceptedAddresses[idx]) {
-						return true, nil
-					}
-				}
-				return false, nil
-			case *net.HardwareAddr:
-				if actualValue == nil {
+func InMacAddressCheck(exceptedArray []string, exceptedAddresses []net.HardwareAddr) (Checker, error) {
+	return CheckFunc(func(value interface{}) (bool, error) {
+		switch actualValue := value.(type) {
+		case string:
+			for idx := range exceptedArray {
+				if actualValue == exceptedArray[idx] {
 					return true, nil
 				}
-				for idx := range exceptedAddresses {
-					if bytes.Equal(*actualValue, exceptedAddresses[idx]) {
-						return true, nil
-					}
-				}
-				return false, nil
 			}
-			return false, ErrActualType("in", "physicalAddress", value)
-		}), nil
+			return false, nil
+		case net.HardwareAddr:
+			for idx := range exceptedAddresses {
+				if bytes.Equal(actualValue, exceptedAddresses[idx]) {
+					return true, nil
+				}
+			}
+			return false, nil
+		case *net.HardwareAddr:
+			if actualValue == nil {
+				return true, nil
+			}
+			for idx := range exceptedAddresses {
+				if bytes.Equal(*actualValue, exceptedAddresses[idx]) {
+					return true, nil
+				}
+			}
+			return false, nil
+		}
+		return false, ErrActualType("in", "physicalAddress", value)
+	}), nil
 }
 
 func NotInMacAddressCheck(exceptedArray []string, exceptedAddresses []net.HardwareAddr) (Checker, error) {
-		return CheckFunc(func(value interface{}) (bool, error) {
-			switch actualValue := value.(type) {
-			case string:
-				for idx := range exceptedArray {
-					if actualValue == exceptedArray[idx] {
-						return false, nil
-					}
+	return CheckFunc(func(value interface{}) (bool, error) {
+		switch actualValue := value.(type) {
+		case string:
+			for idx := range exceptedArray {
+				if actualValue == exceptedArray[idx] {
+					return false, nil
 				}
-				return true, nil
-			case net.HardwareAddr:
-				for idx := range exceptedAddresses {
-					if bytes.Equal(actualValue, exceptedAddresses[idx]) {
-						return false, nil
-					}
+			}
+			return true, nil
+		case net.HardwareAddr:
+			for idx := range exceptedAddresses {
+				if bytes.Equal(actualValue, exceptedAddresses[idx]) {
+					return false, nil
 				}
-				return true, nil
-			case *net.HardwareAddr:
-				if actualValue == nil {
-					return true, nil
-				}
-				for idx := range exceptedAddresses {
-					if bytes.Equal(*actualValue, exceptedAddresses[idx]) {
-						return false, nil
-					}
-				}
+			}
+			return true, nil
+		case *net.HardwareAddr:
+			if actualValue == nil {
 				return true, nil
 			}
+			for idx := range exceptedAddresses {
+				if bytes.Equal(*actualValue, exceptedAddresses[idx]) {
+					return false, nil
+				}
+			}
+			return true, nil
+		}
 
-			return false, ErrActualType("nin", "physicalAddress", value)
-		}), nil
+		return false, ErrActualType("nin", "physicalAddress", value)
+	}), nil
 }
 
 func toIPString(value interface{}) (string, error) {
@@ -485,19 +485,19 @@ func toMacStrings(value interface{}) ([]string, error) {
 }
 
 func parseMacStrings(value interface{}, ss []string) ([]net.HardwareAddr, error) {
-		results := make([]net.HardwareAddr, 0, len(ss))
-		for idx := range ss {
-			if ss[idx] == "" {
-				continue
-			}
-
-			addr, err := net.ParseMAC(ss[idx])
-			if err != nil {
-				return nil, errType(value, "MacArray")
-			}
-			results = append(results, addr)
+	results := make([]net.HardwareAddr, 0, len(ss))
+	for idx := range ss {
+		if ss[idx] == "" {
+			continue
 		}
-		return results, nil
+
+		addr, err := net.ParseMAC(ss[idx])
+		if err != nil {
+			return nil, errType(value, "MacArray")
+		}
+		results = append(results, addr)
+	}
+	return results, nil
 }
 
 func toHardwareAddresses(value interface{}) ([]net.HardwareAddr, error) {
