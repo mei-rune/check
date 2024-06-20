@@ -376,7 +376,7 @@ func ParseInt64WithStr(s string) (int64, bool) {
 func asInt64(a interface{}, mustInt bool) (int64, bool) {
 	switch i := a.(type) {
 	case uint:
-		if i > math.MaxInt64 {
+		if uint64(i) > math.MaxInt64 {
 			return 0, false
 		}
 		return int64(i), true
