@@ -73,6 +73,7 @@ func TestInChecker(t *testing.T) {
 				[]interface{}{"11", 12},
 				[]interface{}{"11", int64(12)},
 				"11,12",
+				"[11,12]",
 				[]string{"11", "12"},
 				[2]string{"11", "12"},
 				[2]string{"11", "12"},

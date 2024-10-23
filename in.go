@@ -612,10 +612,42 @@ func splitStrings(s string, trimSpace, trimEmpty bool) []string {
 	return ss
 }
 
+
+func inCheckForAnyArray(values []interface{}, mustInt bool) (func(interface{}) (bool, error), error) {
+	checkFunc, err := inArrayCheck(values, mustInt)
+	if err == nil {
+		return checkFunc, nil
+	}
+	if mustInt {
+		return nil, err
+	}
+	return inAnyToStringArrayCheck(values)
+}
+
 func inCheck(value interface{}, mustInt bool) (func(interface{}) (bool, error), error) {
 	switch a := value.(type) {
 	case string:
-		ss := splitStrings(a, true, true)
+		bs := []byte(a)
+		var intArray []int64
+		if err := json.Unmarshal(bs, &intArray); err == nil {
+			return inIntArrayCheck(intArray), nil
+		}
+		var uintArray []uint64
+		if err := json.Unmarshal(bs, &uintArray); err == nil {
+			return inUintArrayCheck(uintArray), nil
+		}
+
+		var ss []string
+		if err := json.Unmarshal(bs, &ss); err != nil {
+			var values []interface{}
+			err := json.Unmarshal(bs, &values)
+			if err == nil {
+				return inCheckForAnyArray(values, mustInt)
+			}
+
+			ss = splitStrings(a, true, true)
+		}
+
 		ints, err := toInt64s(value, true, ss)
 		if err == nil {
 			return inIntArrayCheck(ints), nil
@@ -705,14 +737,7 @@ func inCheck(value interface{}, mustInt bool) (func(interface{}) (bool, error), 
 		}
 		return inUintArrayCheck(uints), nil
 	case []interface{}:
-		checkFunc, err := inArrayCheck(a, mustInt)
-		if err == nil {
-			return checkFunc, nil
-		}
-		if mustInt {
-			return nil, err
-		}
-		return inAnyToStringArrayCheck(a)
+			return inCheckForAnyArray(a, mustInt)
 	case uint, uint8, uint16, uint32, uint64, int, int8, int16, int32, int64, float32, float64, json.Number, *json.Number, time.Duration:
 		return DynamicEquals(a)
 	default:
