@@ -1,18 +1,18 @@
 package check
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 	"time"
-	"errors"
 )
 
 func init() {
-	AddCheckFunc("<", "datetime", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
+	AddCheckFunc(">", "datetime", CheckFactoryFunc(func(argValue interface{}) (Checker, error) {
 		var exceptedValue time.Time
 		switch aValue := argValue.(type) {
 		case string:
-			if containNowFunc(aValue){
+			if containNowFunc(aValue) {
 				readTime, err := ParseTime(aValue)
 				if err != nil {
 					return nil, err
@@ -81,7 +81,7 @@ func init() {
 		var exceptedValue time.Time
 		switch aValue := argValue.(type) {
 		case string:
-			if containNowFunc(aValue){
+			if containNowFunc(aValue) {
 				readTime, err := ParseTime(aValue)
 				if err != nil {
 					return nil, err
@@ -150,7 +150,7 @@ func init() {
 		var exceptedValue time.Time
 		switch aValue := argValue.(type) {
 		case string:
-			if containNowFunc(aValue){
+			if containNowFunc(aValue) {
 				readTime, err := ParseTime(aValue)
 				if err != nil {
 					return nil, err
@@ -219,7 +219,7 @@ func init() {
 		var exceptedValue time.Time
 		switch aValue := argValue.(type) {
 		case string:
-			if containNowFunc(aValue){
+			if containNowFunc(aValue) {
 				readTime, err := ParseTime(aValue)
 				if err != nil {
 					return nil, err
@@ -480,7 +480,7 @@ func init() {
 }
 
 func containNowFunc(s string) bool {
-	return strings.Contains(s, "now()") 
+	return strings.Contains(s, "now()")
 }
 
 func ParseTime(s string) (func() time.Time, error) {

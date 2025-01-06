@@ -612,7 +612,6 @@ func splitStrings(s string, trimSpace, trimEmpty bool) []string {
 	return ss
 }
 
-
 func inCheckForAnyArray(values []interface{}, mustInt bool) (func(interface{}) (bool, error), error) {
 	checkFunc, err := inArrayCheck(values, mustInt)
 	if err == nil {
@@ -737,7 +736,7 @@ func inCheck(value interface{}, mustInt bool) (func(interface{}) (bool, error), 
 		}
 		return inUintArrayCheck(uints), nil
 	case []interface{}:
-			return inCheckForAnyArray(a, mustInt)
+		return inCheckForAnyArray(a, mustInt)
 	case uint, uint8, uint16, uint32, uint64, int, int8, int16, int32, int64, float32, float64, json.Number, *json.Number, time.Duration:
 		return DynamicEquals(a)
 	default:
