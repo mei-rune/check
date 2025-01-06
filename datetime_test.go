@@ -16,8 +16,15 @@ func TestDatetime(t *testing.T) {
 		{t: "datetime", operator: ">=", operant: "now() - 99999h", value: "2025-01-06T12:12:12+08:00", excepted_status: true},
 
 
+		{t: "datetime", operator: ">", operant: "now( ) - 99999h", value: "2025-01-06T12:12:12+08:00", excepted_status: true},
+		{t: "datetime", operator: ">=", operant: "now( ) - 99999h", value: "2025-01-06T12:12:12+08:00", excepted_status: true},
+
+
 		{t: "datetime", operator: "<", operant: "now() + 99999h", value: "2025-01-06T12:12:12+08:00", excepted_status: true},
 		{t: "datetime", operator: "<=", operant: "now() + 99999h", value: "2025-01-06T12:12:12+08:00", excepted_status: true},
+		
+		{t: "datetime", operator: "<", operant: "now( ) + 99999h", value: "2025-01-06T12:12:12+08:00", excepted_status: true},
+		{t: "datetime", operator: "<=", operant: "now( ) + 99999h", value: "2025-01-06T12:12:12+08:00", excepted_status: true},
 		
 	}
 	for _, test := range testcases {

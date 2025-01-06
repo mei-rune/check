@@ -226,7 +226,6 @@ func MakeChecker(typ, operator string, value interface{}) (Checker, error) {
 		}
 	}
 
-	fmt.Println("=====use default")
 	if factories.Default != nil {
 		return factories.Default.Create(value)
 	}

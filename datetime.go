@@ -480,7 +480,7 @@ func init() {
 }
 
 func containNowFunc(s string) bool {
-	return strings.Contains(s, "now()")
+	return strings.Contains(s, "now(")
 }
 
 func ParseTime(s string) (func() time.Time, error) {
